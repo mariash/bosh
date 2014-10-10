@@ -172,6 +172,12 @@ module Bosh::Director
 
       result.synchronize do
         while result.empty?
+          # log pending messages
+          nats_client = @nats_rpc.instance_variable_get(:@nats)
+          pending_messages = nats_client.instance_variable_get(:@pending)
+          pending_nats_messages = pending_messages && pending_messages.size || -1
+          @logger.warn("NATS Request #{request_id} did not respond - Pending NATS messages: #{pending_nats_messages}")
+
           timeout = timeout_time - Time.now.to_f
           unless timeout > 0
             @nats_rpc.cancel_request(request_id)
