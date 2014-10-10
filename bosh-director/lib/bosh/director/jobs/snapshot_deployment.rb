@@ -42,7 +42,6 @@ module Bosh::Director
       ERROR = 3
 
       def send_alert(instance, message)
-        nats = Bosh::Director::Config.nats
         payload = Yajl::Encoder.encode(
             {
                 "id"         => 'director',
@@ -53,7 +52,9 @@ module Bosh::Director
             }
         )
 
-        nats.publish('hm.director.alert', payload)
+        EM.schedule do
+          Bosh::Director::Config.nats.publish('hm.director.alert', payload)
+        end
       end
     end
   end

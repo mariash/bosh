@@ -16,9 +16,13 @@ describe Bosh::Monitor::DirectorMonitor do
       "created_at" => Time.now.to_i
   } }
 
+  before do
+    allow(EM).to receive(:next_tick).and_yield
+  end
+
   describe 'subscribe' do
     it 'subscribes to hm.director.alert over NATS' do
-      nats.should_receive(:subscribe).with('hm.director.alert')
+      expect(nats).to receive(:subscribe).with('hm.director.alert')
       monitor.subscribe
     end
 

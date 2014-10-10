@@ -13,17 +13,19 @@ module Bosh::Director
     end
 
     def subscribe_inbox
-      @nats.subscribe("#{@inbox_name}.>") do |message, _, subject|
-        @logger.debug("RECEIVED: #{subject} #{message}")
-        begin
-          request_id = subject.split(".").last
-          callback = @lock.synchronize { @requests.delete(request_id) }
-          if callback
-            message = Yajl::Parser.new.parse(message)
-            callback.call(message)
+      EM.schedule do
+        @nats.subscribe("#{@inbox_name}.>") do |message, _, subject|
+          @logger.debug("RECEIVED: #{subject} #{message}")
+          begin
+            request_id = subject.split(".").last
+            callback = @lock.synchronize { @requests.delete(request_id) }
+            if callback
+              message = Yajl::Parser.new.parse(message)
+              callback.call(message)
+            end
+          rescue Exception => e
+            @logger.warn(e.message)
           end
-        rescue Exception => e
-          @logger.warn(e.message)
         end
       end
     end
@@ -36,7 +38,7 @@ module Bosh::Director
       end
       message = Yajl::Encoder.encode(request)
       @logger.debug("SENT: #{client} #{message}")
-      EM.next_tick do
+      EM.schedule do
         @nats.publish(client, message)
       end
       request_id
