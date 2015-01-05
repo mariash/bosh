@@ -473,7 +473,15 @@ module Bosh
         end
 
         def get_task_state(task_id)
-          get_task(task_id)['state']
+          task_info = get_task(task_id)
+          task_state = task_info['state']
+
+          if task_state.to_sym == :error
+            nl
+            say("Task #{task_id} errored. Info: #{task_info.inspect}")
+          end
+
+          task_state
         end
 
         def get_task_result(task_id)
