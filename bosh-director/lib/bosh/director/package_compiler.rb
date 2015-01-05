@@ -249,8 +249,10 @@ module Bosh::Director
             loop do
               break if director_job_cancelled?
               task = @tasks_mutex.synchronize { @ready_tasks.pop }
+              @logger.debug("compile_packages task: #{task.inspect}")
               break if task.nil?
 
+              @logger.debug("compile_packages processing task")
               pool.process { process_task(task) }
             end
 
