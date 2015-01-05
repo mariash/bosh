@@ -254,6 +254,7 @@ module Bosh::Director
               pool.process { process_task(task) }
             end
 
+            @logger.debug("compile_packages: working: '#{!pool.working?}', cancelled: '#{director_job_cancelled?}', empty: '#{@ready_tasks.empty?}'")
             break if !pool.working? && (director_job_cancelled? || @ready_tasks.empty?)
             sleep(0.1)
           end

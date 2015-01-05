@@ -97,6 +97,7 @@ module Bosh
     end
 
     def working?
+      @logger.debug("working?: boom: '#{@boom.inspect}', threads: '#{@available_threads}', max threads: '#{@max_threads}', actions: '#{@actions.inspect}'")
       @boom.nil? && (@available_threads != @max_threads || !@actions.empty?)
     end
 
