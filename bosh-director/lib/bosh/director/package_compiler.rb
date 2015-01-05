@@ -247,7 +247,14 @@ module Bosh::Director
           loop do
             # process as many tasks without waiting
             loop do
-              break if director_job_cancelled?
+              begin
+                break if director_job_cancelled?
+              rescue TaskNotFound => e
+                tasks = Models::Task.all
+                @logger.debug("compile_packages tasks: #{tasks.inspect}")
+                raise e
+              end
+
               task = @tasks_mutex.synchronize { @ready_tasks.pop }
               @logger.debug("compile_packages task: #{task.inspect}")
               break if task.nil?
