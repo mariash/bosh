@@ -258,6 +258,7 @@ module Bosh::Director
               rescue Exception => e
                 tasks = Models::Task.all
                 msg = "Failed with tasks: #{tasks.inspect}, original: #{e.inspect}"
+                msg += ", pid: #{Process.pid}"
                 msg += ", compile_packages: working: '#{!pool.working?}', empty: '#{@ready_tasks.empty?}'"
                 msg += ", task: #{task.inspect}"
                 msg += ", internal_loop: #{internal_loop}, external_loop: #{external_loop}"
