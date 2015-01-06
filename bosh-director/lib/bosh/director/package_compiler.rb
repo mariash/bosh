@@ -245,11 +245,10 @@ module Bosh::Director
       begin
         external_loop = 0
         internal_loop = 0
+        task = nil
         ThreadPool.new(:max_threads => number_of_workers).wrap do |pool|
           loop do
             external_loop += 1
-            task = nil
-
             # process as many tasks without waiting
             loop do
               internal_loop += 1
