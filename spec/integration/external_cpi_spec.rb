@@ -6,13 +6,13 @@ describe 'external CPIs', type: :integration do
 
     before(:all) do
       current_sandbox.external_cpi_enabled = true
-      current_sandbox.reconfigure_director
+      current_sandbox.restart_director
       current_sandbox.reconfigure_workers
     end
 
     after(:all) do
       current_sandbox.external_cpi_enabled = false
-      current_sandbox.reconfigure_director
+      current_sandbox.restart_director
       current_sandbox.reconfigure_workers
     end
 
