@@ -245,7 +245,6 @@ module Bosh::Director
       begin
         external_loop = 0
         internal_loop = 0
-        task = nil
         ThreadPool.new(:max_threads => number_of_workers).wrap do |pool|
           loop do
             external_loop += 1
@@ -257,6 +256,7 @@ module Bosh::Director
                 break if director_job_cancelled?
               rescue Exception => e
                 tasks = Models::Task.all
+                @logger.debug("compile_packages failed with #{e.inspect}")
                 msg = "Failed with tasks: #{tasks.inspect}, original: #{e.inspect}"
                 msg += ", pid: #{Process.pid}"
                 msg += ", compile_packages: working: '#{!pool.working?}', empty: '#{@ready_tasks.empty?}'"
