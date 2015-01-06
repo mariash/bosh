@@ -243,6 +243,8 @@ module Bosh::Director
       number_of_workers = @deployment_plan.compilation.workers
 
       begin
+        external_loop = 0
+        internal_loop = 0
         ThreadPool.new(:max_threads => number_of_workers).wrap do |pool|
           loop do
             external_loop += 1
