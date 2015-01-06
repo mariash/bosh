@@ -128,7 +128,7 @@ module Bosh::Dev::Sandbox
       @database_created = true
       @database_migrator.migrate
 
-      reconfigure_director
+      restart_director
       @worker_processes.each(&:start)
     end
 
@@ -137,16 +137,14 @@ module Bosh::Dev::Sandbox
       @logger.info("Reset took #{time} seconds")
     end
 
-    def reconfigure_director
+    def restart_director
       @director_process.stop
 
-      write_in_sandbox(DIRECTOR_CONFIG, load_config_template(DIRECTOR_CONF_TEMPLATE))
-
-      # FileUtils.rm_rf(director_tmp_path)
-      FileUtils.mkdir_p(director_tmp_path)
-      File.open(File.join(director_tmp_path, 'state.json'), 'w') do |f|
-        f.write(Yajl::Encoder.encode('uuid' => DIRECTOR_UUID))
+      if director_configuration_changed?
+        write_in_sandbox(DIRECTOR_CONFIG, load_config_template(DIRECTOR_CONF_TEMPLATE))
       end
+
+      reset_director_tmp_path
 
       @director_process.start
 
@@ -157,6 +155,14 @@ module Bosh::Dev::Sandbox
       rescue
         output_service_log(@director_process)
         raise
+      end
+    end
+
+    def reset_director_tmp_path
+      FileUtils.rm_rf(director_tmp_path)
+      FileUtils.mkdir_p(director_tmp_path)
+      File.open(File.join(director_tmp_path, 'state.json'), 'w') do |f|
+        f.write(Yajl::Encoder.encode('uuid' => DIRECTOR_UUID))
       end
     end
 
@@ -286,10 +292,8 @@ module Bosh::Dev::Sandbox
 
       FileUtils.rm_rf(blobstore_storage_dir)
       FileUtils.mkdir_p(blobstore_storage_dir)
-      # FileUtils.rm_rf(director_tmp_path)
-      FileUtils.mkdir_p(director_tmp_path)
 
-      reconfigure_director if director_configuration_changed?
+      restart_director
     end
 
     def resque_is_done?
