@@ -117,7 +117,7 @@ module Bosh::Director
     rescue Exception => e
       log_exception(e)
       @task_logger.error("#{e}\n#{e.backtrace.join("\n")}")
-      finish_task(:error, "#{e.to_s}\n#{e.backtrace.join("\n")}")
+      finish_task(:error, "#{e}\n#{e.backtrace.join("\n")}")
     end
 
     # Spawns a thread that periodically updates task checkpoint time.
