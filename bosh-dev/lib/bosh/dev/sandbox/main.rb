@@ -142,7 +142,7 @@ module Bosh::Dev::Sandbox
 
       write_in_sandbox(DIRECTOR_CONFIG, load_config_template(DIRECTOR_CONF_TEMPLATE))
 
-      FileUtils.rm_rf(director_tmp_path)
+      # FileUtils.rm_rf(director_tmp_path)
       FileUtils.mkdir_p(director_tmp_path)
       File.open(File.join(director_tmp_path, 'state.json'), 'w') do |f|
         f.write(Yajl::Encoder.encode('uuid' => DIRECTOR_UUID))
@@ -200,7 +200,7 @@ module Bosh::Dev::Sandbox
       @health_monitor_process.stop
       @database.drop_db
       FileUtils.rm_f(dns_db_path)
-      FileUtils.rm_rf(director_tmp_path)
+      # FileUtils.rm_rf(director_tmp_path)
       FileUtils.rm_rf(agent_tmp_path)
       FileUtils.rm_rf(blobstore_storage_dir)
     end
@@ -286,7 +286,7 @@ module Bosh::Dev::Sandbox
 
       FileUtils.rm_rf(blobstore_storage_dir)
       FileUtils.mkdir_p(blobstore_storage_dir)
-      FileUtils.rm_rf(director_tmp_path)
+      # FileUtils.rm_rf(director_tmp_path)
       FileUtils.mkdir_p(director_tmp_path)
 
       reconfigure_director if director_configuration_changed?
