@@ -249,7 +249,7 @@ module Bosh::Director
             loop do
               begin
                 break if director_job_cancelled?
-              rescue TaskNotFound => e
+              rescue Exception => e
                 tasks = Models::Task.all
                 @logger.debug("compile_packages tasks: #{tasks.inspect}")
                 raise e
