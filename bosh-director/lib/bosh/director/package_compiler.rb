@@ -248,11 +248,11 @@ module Bosh::Director
             # process as many tasks without waiting
             loop do
               begin
+                @logger.debug("compile_packages checking if job is cancelled")
                 break if director_job_cancelled?
               rescue Exception => e
                 tasks = Models::Task.all
-                @logger.debug("compile_packages tasks: #{tasks.inspect}")
-                raise e
+                raise "Failed with tasks: #{tasks.inspect}, original: #{e.inspect}"
               end
 
               task = @tasks_mutex.synchronize { @ready_tasks.pop }
