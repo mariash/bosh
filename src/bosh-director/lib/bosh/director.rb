@@ -150,6 +150,7 @@ require 'bosh/director/sequel'
 require 'bosh/director/agent_broadcaster'
 require 'bosh/director/timeout'
 require 'bosh/director/nats_client_cert_generator'
+require 'bosh/director/dynamic_disk_manager'
 
 require 'bosh/director/config_server/deep_hash_replacement'
 require 'bosh/director/config_server/uaa_auth_provider'
@@ -229,6 +230,7 @@ require 'bosh/director/jobs/delete_vm'
 require 'bosh/director/jobs/helpers'
 require 'bosh/director/jobs/db_job'
 require 'bosh/director/jobs/orphan_disk'
+require 'bosh/director/jobs/provide_dynamic_disk'
 
 require 'bosh/director/models/helpers/model_helper'
 
