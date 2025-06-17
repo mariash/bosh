@@ -42,5 +42,19 @@ module Bosh::Director
     rescue Bosh::Clouds::NotImplemented => e
        @logger.debug(e.inspect)
     end
+
+    def update_dynamic_disk_metadata(cloud, disk, metadata)
+      # TODO figure out this one
+      if cloud.respond_to?(:set_disk_metadata)
+        metadata = metadata.merge(@director_metadata)
+        metadata['deployment'] = disk.instance.deployment.name
+        # TODO disk name + other relevant metadata
+        metadata['attached_at'] = Time.new.getutc.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        cloud.set_disk_metadata(disk.disk_cid, metadata)
+      end
+    rescue Bosh::Clouds::NotImplemented => e
+      @logger.debug(e.inspect)
+    end
   end
 end

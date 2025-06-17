@@ -1,6 +1,6 @@
 module Bosh::Director
   module Jobs
-    class ProvideDynamicDisk < BaseJob
+    class DetachDynamicDisk < BaseJob
 
       @queue = :normal
 
@@ -21,32 +21,23 @@ module Bosh::Director
         agent_id = @subject.split('.', 5).last
         raise 'Subject must include agent_id' if agent_id.empty?
 
-        vm_cid = Models::Vm.find(agent_id: agent_id).cid
         cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
         cloud = Bosh::Director::CloudFactory.create.get(nil)
         unless cloud.has_disk(@payload['disk_name'])
-          disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, vm_cid)
-          # TODO: save in database
+          raise "Could not find disk #{@payload['disk_name']}"
         end
 
-        if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-          # TODO implement this
-          # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-          # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
-          cloud.set_disk_metadata(disk_name, @payload['metadata'])
-        end
-
-        disk_hint = cloud.attach_disk(vm_cid, disk_name)
+        # TODO find disk cid; this may need us to start saving disk state in the db
+        vm_cid = Models::Vm.find(agent_id: agent_id).cid
+        cloud.detach_disk(vm_cid, @disk.disk_cid)
 
         response = {
           'error' => nil,
-          'disk_name' => disk_name,
-          'disk_hint' => disk_hint,
         }
         Config.nats_rpc.send_message(@reply, response)
 
-        "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+        "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
       rescue => e
         Config.nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
