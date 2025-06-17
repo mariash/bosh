@@ -1,6 +1,6 @@
 module Bosh::Director
   module Jobs
-    class ProvideDynamicDisk < BaseJob
+    class AttachDynamicDisk < BaseJob
 
       @queue = :normal
 
@@ -21,15 +21,14 @@ module Bosh::Director
         agent_id = @subject.split('.', 5).last
         raise 'Subject must include agent_id' if agent_id.empty?
 
-        vm_cid = Models::Vm.find(agent_id: agent_id).cid
         cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
         cloud = Bosh::Director::CloudFactory.create.get(nil)
         unless cloud.has_disk(@payload['disk_name'])
-          disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, vm_cid)
-          # TODO: save in database
+          raise "Could not find disk #{@payload['disk_name']}"
         end
 
+        # TODO See if we should use the MetadataUpdater abstraction? It seems like overkill.
         if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
           # TODO implement this
           # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
@@ -37,6 +36,8 @@ module Bosh::Director
           cloud.set_disk_metadata(disk_name, @payload['metadata'])
         end
 
+        # TODO record which vm the disk is attached to in the DB
+        vm_cid = Models::Vm.find(agent_id: agent_id).cid
         disk_hint = cloud.attach_disk(vm_cid, disk_name)
 
         response = {
@@ -70,10 +71,6 @@ module Bosh::Director
           raise 'Invalid request: `deployment` must be provided'
         elsif payload['disk_name'].nil? || payload['disk_name'].empty?
           raise 'Invalid request: `disk_name` must be provided'
-        elsif payload['disk_size'].nil? || payload['disk_size'] == 0
-          raise 'Invalid request: `disk_size` must be provided'
-        elsif payload['disk_pool_name'].nil? || payload['disk_pool_name'].empty?
-          raise 'Invalid request: `disk_pool_name` must be provided'
         elsif @reply.nil? || @reply.empty?
           raise 'Invalid request: `disk_pool_name` must be provided'
         end
