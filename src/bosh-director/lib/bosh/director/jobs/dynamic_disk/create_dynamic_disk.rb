@@ -1,16 +1,14 @@
 module Bosh::Director
   module Jobs::DynamicDisk
-    class CreateDynamicDisk < BaseJob
-
+    class CreateDynamicDisk < Jobs::BaseJob
       @queue = :normal
 
       def self.job_type
         :provide_dynamic_disk
       end
 
-      def initialize(nats_rpc, reply, payload)
+      def initialize(reply, payload)
         super()
-        @nats_rpc = nats_rpc
         @reply = reply
         @payload = payload
       end
@@ -39,15 +37,19 @@ module Bosh::Director
           'disk_name' => disk_name,
           'disk_hint' => disk_hint,
         }
-        @nats_rpc.send_message(@reply, response)
+        nats_rpc.send_message(@reply, response)
 
         "created disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
       rescue => e
-        @nats_rpc.send_message(@reply, { 'error' => e.message })
+        nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
       end
 
       private
+
+      def nats_client
+        Config.nats_rpc
+      end
 
       def find_disk_cloud_properties(disk_pool_name)
         configs = Models::Config.latest_set('cloud')

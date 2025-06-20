@@ -13,14 +13,44 @@ module Bosh::Director
       def setup_events
         disk_controller = DynamicDiskController.new(@nats_rpc, @logger)
 
-        disk_controller.handlers.map do |key, handler|
-          @nats_rpc.nats.subscribe(key) do |payload, reply, subject|
-            payload = parse_payload(payload)
-            handler.call(reply, subject, payload)
-          rescue => e
-            @nats_rpc.send_message(reply, { "error" => e.message })
-            raise
-          end
+        @nats_rpc.nats.subscribe('director.agent.disk.create.*') do |payload, reply, _subject|
+          payload = parse_payload(payload)
+          disk_controller.handle_create_disk_request(reply, payload)
+        rescue => e
+          @nats_rpc.send_message(reply, { "error" => e.message })
+          raise
+        end
+
+        @nats_rpc.nats.subscribe('director.agent.disk.attach.*') do |payload, reply, subject|
+          payload = parse_payload(payload)
+          disk_controller.handle_attach_disk_request(parse_agent_id(subject), reply, payload)
+        rescue => e
+          @nats_rpc.send_message(reply, { "error" => e.message })
+          raise
+        end
+
+        @nats_rpc.nats.subscribe('director.agent.disk.provide.*') do |payload, reply, subject|
+          payload = parse_payload(payload)
+          disk_controller.handle_provide_disk_request(parse_agent_id(subject), reply, payload)
+        rescue => e
+          @nats_rpc.send_message(reply, { "error" => e.message })
+          raise
+        end
+
+        @nats_rpc.nats.subscribe('director.agent.disk.detach.*') do |payload, reply, subject|
+          payload = parse_payload(payload)
+          disk_controller.handle_detach_disk_request(parse_agent_id(subject), reply, payload)
+        rescue => e
+          @nats_rpc.send_message(reply, { "error" => e.message })
+          raise
+        end
+
+        @nats_rpc.nats.subscribe('director.agent.disk.delete.*') do |payload, reply, _subject|
+          payload = parse_payload(payload)
+          disk_controller.handle_delete_disk_request(reply, payload)
+        rescue => e
+          @nats_rpc.send_message(reply, { "error" => e.message })
+          raise
         end
       end
 

@@ -1,16 +1,14 @@
 module Bosh::Director
   module Jobs::DynamicDisk
-    class DetachDynamicDisk < BaseJob
-
+    class DetachDynamicDisk < Jobs::BaseJob
       @queue = :normal
 
       def self.job_type
         :provide_dynamic_disk
       end
 
-      def initialize(nats_rpc, agent_id, reply, payload)
+      def initialize(agent_id, reply, payload)
         super()
-        @nats_rpc = nats_rpc
         @agent_id = agent_id
         @reply = reply
         @payload = payload
@@ -31,15 +29,18 @@ module Bosh::Director
         response = {
           'error' => nil,
         }
-        @nats_rpc.send_message(@reply, response)
+        nats_rpc.send_message(@reply, response)
 
         "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
       rescue => e
-        @nats_rpc.send_message(@reply, { 'error' => e.message })
+        nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
       end
 
       private
+      def nats_client
+        Config.nats_rpc
+      end
 
       def find_disk_cloud_properties(disk_pool_name)
         configs = Models::Config.latest_set('cloud')
