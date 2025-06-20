@@ -1,6 +1,6 @@
 module Bosh::Director
-  module Jobs
-    class AttachDynamicDisk < BaseJob
+  module Jobs::DynamicDisk
+    class DetachDynamicDisk < BaseJob
 
       @queue = :normal
 
@@ -8,8 +8,10 @@ module Bosh::Director
         :provide_dynamic_disk
       end
 
-      def initialize(subject, reply, payload)
-        @subject = subject
+      def initialize(nats_rpc, agent_id, reply, payload)
+        super()
+        @nats_rpc = nats_rpc
+        @agent_id = agent_id
         @reply = reply
         @payload = payload
       end
@@ -17,39 +19,23 @@ module Bosh::Director
       def perform
         validate_message(@payload)
 
-        # subject: director.agent.disk.provide.agent_id
-        agent_id = @subject.split('.', 5).last
-        raise 'Subject must include agent_id' if agent_id.empty?
-
-        cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
-
         cloud = Bosh::Director::CloudFactory.create.get(nil)
         unless cloud.has_disk(@payload['disk_name'])
           raise "Could not find disk #{@payload['disk_name']}"
         end
 
-        # TODO See if we should use the MetadataUpdater abstraction? It seems like overkill.
-        if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-          # TODO implement this
-          # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-          # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
-          cloud.set_disk_metadata(disk_name, @payload['metadata'])
-        end
-
-        # TODO record which vm the disk is attached to in the DB
-        vm_cid = Models::Vm.find(agent_id: agent_id).cid
-        disk_hint = cloud.attach_disk(vm_cid, disk_name)
+        # TODO find disk cid; this may need us to start saving disk state in the db
+        vm_cid = Models::Vm.find(agent_id: @agent_id).cid
+        cloud.detach_disk(vm_cid, @disk.disk_cid)
 
         response = {
           'error' => nil,
-          'disk_name' => disk_name,
-          'disk_hint' => disk_hint,
         }
-        Config.nats_rpc.send_message(@reply, response)
+        @nats_rpc.send_message(@reply, response)
 
-        "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+        "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
       rescue => e
-        Config.nats_rpc.send_message(@reply, { 'error' => e.message })
+        @nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
       end
 
@@ -71,6 +57,10 @@ module Bosh::Director
           raise 'Invalid request: `deployment` must be provided'
         elsif payload['disk_name'].nil? || payload['disk_name'].empty?
           raise 'Invalid request: `disk_name` must be provided'
+        elsif payload['disk_size'].nil? || payload['disk_size'] == 0
+          raise 'Invalid request: `disk_size` must be provided'
+        elsif payload['disk_pool_name'].nil? || payload['disk_pool_name'].empty?
+          raise 'Invalid request: `disk_pool_name` must be provided'
         elsif @reply.nil? || @reply.empty?
           raise 'Invalid request: `disk_pool_name` must be provided'
         end

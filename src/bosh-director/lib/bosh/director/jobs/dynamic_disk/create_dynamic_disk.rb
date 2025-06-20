@@ -1,6 +1,6 @@
 module Bosh::Director
-  module Jobs
-    class ProvideDynamicDisk < BaseJob
+  module Jobs::DynamicDisk
+    class CreateDynamicDisk < BaseJob
 
       @queue = :normal
 
@@ -8,8 +8,9 @@ module Bosh::Director
         :provide_dynamic_disk
       end
 
-      def initialize(subject, reply, payload)
-        @subject = subject
+      def initialize(nats_rpc, reply, payload)
+        super()
+        @nats_rpc = nats_rpc
         @reply = reply
         @payload = payload
       end
@@ -17,38 +18,32 @@ module Bosh::Director
       def perform
         validate_message(@payload)
 
-        # subject: director.agent.disk.provide.agent_id
-        agent_id = @subject.split('.', 5).last
-        raise 'Subject must include agent_id' if agent_id.empty?
-
-        vm_cid = Models::Vm.find(agent_id: agent_id).cid
         cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
         cloud = Bosh::Director::CloudFactory.create.get(nil)
-        unless cloud.has_disk(@payload['disk_name'])
-          disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, vm_cid)
+        if cloud.has_disk(@payload['disk_name'])
+          raise "disk '#{}'"
           # TODO: save in database
         end
 
+        # TODO this still needed?
         if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-          # TODO implement this
-          # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-          # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
           cloud.set_disk_metadata(disk_name, @payload['metadata'])
         end
 
-        disk_hint = cloud.attach_disk(vm_cid, disk_name)
+        disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, nil)
+        # TODO save disk name to db
 
         response = {
           'error' => nil,
           'disk_name' => disk_name,
           'disk_hint' => disk_hint,
         }
-        Config.nats_rpc.send_message(@reply, response)
+        @nats_rpc.send_message(@reply, response)
 
-        "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+        "created disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
       rescue => e
-        Config.nats_rpc.send_message(@reply, { 'error' => e.message })
+        @nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
       end
 

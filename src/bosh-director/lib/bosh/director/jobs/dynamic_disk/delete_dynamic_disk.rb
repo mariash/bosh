@@ -1,6 +1,6 @@
 module Bosh::Director
-  module Jobs
-    class DetachDynamicDisk < BaseJob
+  module Jobs::DynamicDisk
+    class DeleteDynamicDisk < BaseJob
 
       @queue = :normal
 
@@ -8,8 +8,9 @@ module Bosh::Director
         :provide_dynamic_disk
       end
 
-      def initialize(subject, reply, payload)
-        @subject = subject
+      def initialize(nats_rpc, reply, payload)
+        super()
+        @nats_rpc = nats_rpc
         @reply = reply
         @payload = payload
       end
@@ -17,29 +18,26 @@ module Bosh::Director
       def perform
         validate_message(@payload)
 
-        # subject: director.agent.disk.provide.agent_id
-        agent_id = @subject.split('.', 5).last
-        raise 'Subject must include agent_id' if agent_id.empty?
-
         cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
         cloud = Bosh::Director::CloudFactory.create.get(nil)
         unless cloud.has_disk(@payload['disk_name'])
-          raise "Could not find disk #{@payload['disk_name']}"
+          # TODO raise or exit early
+          raise "TODO"
         end
 
-        # TODO find disk cid; this may need us to start saving disk state in the db
-        vm_cid = Models::Vm.find(agent_id: agent_id).cid
-        cloud.detach_disk(vm_cid, @disk.disk_cid)
+        # TODO what to do when a disk is still attached? Maybe add a force param?
+        # TODO Map name => cid
+        cloud.delete_disk(disk_name)
 
         response = {
           'error' => nil,
         }
-        Config.nats_rpc.send_message(@reply, response)
+        @nats_rpc.send_message(@reply, response)
 
-        "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+        "deleted disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
       rescue => e
-        Config.nats_rpc.send_message(@reply, { 'error' => e.message })
+        @nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
       end
 
