@@ -1,7 +1,7 @@
 module Bosh::Director
   module ApiNats
     class DynamicDiskController
-      extend ValidationHelper
+      include ValidationHelper
 
       USERNAME = "bosh-agent".freeze
 
@@ -30,23 +30,22 @@ module Bosh::Director
           [agent_id, reply, payload]
         )
       rescue => e
-        @nats_rpc.send_message(reply, { "error" => e.message })
+        @nats_rpc.send_message(reply, { 'error' => e.message })
         raise
       end
 
       def handle_provide_disk_request(agent_id, reply, payload)
-        options = {
-          deployment: safe_property(payload, "deployment", class: String),
-          disk_pool_name: safe_property(payload, "disk_pool_name", class: String),
-          disk_name: safe_property(payload, "disk_name", class: String),
-          disk_size: safe_property(payload, "disk_size", class: Integer),
-          metadata: safe_property(payload, "metadata", class: Hash, optional: true),
-        }
+        deployment = safe_property(payload, "deployment", class: String)
+        disk_name = safe_property(payload, "disk_name", class: String)
+        disk_pool_name = safe_property(payload, "disk_pool_name", class: String)
+        disk_size = safe_property(payload, "disk_size", class: Integer)
+        metadata = safe_property(payload, "metadata", class: Hash, optional: true)
+        
         JobQueue.new.enqueue(
           USERNAME,
           Jobs::DynamicDisk::ProvideDynamicDisk,
           'provide dynamic disk',
-          [agent_id, reply, options]
+          [agent_id, reply, deployment, disk_name, disk_pool_name, disk_size, metadata]
         )
       rescue => e
         @nats_rpc.send_message(reply, { "error" => e.message })

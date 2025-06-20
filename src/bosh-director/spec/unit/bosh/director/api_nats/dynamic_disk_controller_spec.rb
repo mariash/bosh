@@ -1,46 +1,58 @@
 require 'spec_helper'
 
-# module Bosh::Director
-#   describe ApiNats::DynamicDiskController do
-    # subject(:controller) { DynamicDiskController.new(per_spec_logger, nats_rpc) }
-    # let(:nats_rpc) { instance_double('Bosh::Director::NatsRpc') }
-    # let(:job_queue) { instance_double('Bosh::Director::JobQueue') }
+module Bosh::Director
+  module ApiNats
+  describe DynamicDiskController do
+    subject(:controller) { DynamicDiskController.new(per_spec_logger, nats_rpc) }
+    let(:nats_rpc) { instance_double('Bosh::Director::NatsRpc') }
+    let(:job_queue) { instance_double('Bosh::Director::JobQueue', enqueue: task) }
+    before { allow(JobQueue).to receive(:new).and_return(job_queue) }
+    let(:task) { instance_double('Bosh::Director::Models::Task', id: 1) }
 
-    # describe 'handle_provide_disk_request' do
-    #   let(:agent_id) { 'fake_agent_id' }
-    #   let(:reply) { 'inbox.fake' }
-    #   let(:deployment) { 'fake_deployment_name' }
-    #   let(:disk_pool_name) { 'fake_disk_pool_name' }
-    #   let(:disk_name) { 'fake_disk_name' }
-    #   let(:disk_size) { 1000 }
-    #   let(:payload) { {
-    #     deployment: deployment,
-    #     disk_pool_name: disk_pool_name,
-    #     disk_name: disk_name,
-    #     disk_size: disk_size,
-    #   } }
+    describe 'handle_provide_disk_request' do
+      let(:agent_id) { 'fake_agent_id' }
+      let(:reply) { 'inbox.fake' }
+      let(:deployment) { 'fake_deployment_name' }
+      let(:disk_pool_name) { 'fake_disk_pool_name' }
+      let(:disk_name) { 'fake_disk_name' }
+      let(:disk_size) { 1000 }
+      let(:metadata) { {'some-key' => 'some-value'} }
+      let(:payload) do 
+        {
+          'deployment' => deployment,
+          'disk_pool_name' => disk_pool_name,
+          'disk_name' => disk_name,
+          'disk_size' => disk_size,
+          'metadata' => metadata
+        }
+      end
 
+      it 'enqueues a CreateDynamicDisk task' do
+        expect(job_queue).to receive(:enqueue).with(
+          'bosh-agent',
+          Jobs::DynamicDisk::ProvideDynamicDisk,
+          'provide dynamic disk',
+          [agent_id, reply, deployment, disk_name, disk_pool_name, disk_size, metadata],
+        ).and_return(task)
 
-    #   it 'schedules a job' do
-    #     expect(controller.handle_provide_disk_request(agent_id, reply, payload)).to eq(nil)
-    #     expect(job_queue).to receive_message_chain(:new, :enqueue)
-    #   end
+        controller.handle_provide_disk_request(agent_id, reply, payload)
+      end
 
-    #   context 'payload is invalid' do
-    #     it '' do
-    #       expect(instance_lookup.by_id(instance.id)).to eq instance
-    #       expect(nats_rpc).to have_received(:fake)
-    #     end
-    #   end
-    #   #
-    #   # context 'no instance exists for id' do
-    #   #   it 'raises' do
-    #   #     expect {
-    #   #       instance_lookup.by_id(999999)
-    #   #     }.to raise_error(InstanceNotFound, "Instance 999999 doesn't exist")
-    #   #   end
-    #   # end
-    # end
+      # context 'payload is invalid' do
+      #   it '' do
+      #     expect(instance_lookup.by_id(instance.id)).to eq instance
+      #     expect(nats_rpc).to have_received(:fake)
+      #   end
+      # end
+      #
+      # context 'no instance exists for id' do
+      #   it 'raises' do
+      #     expect {
+      #       instance_lookup.by_id(999999)
+      #     }.to raise_error(InstanceNotFound, "Instance 999999 doesn't exist")
+      #   end
+      # end
+    end
 
     # describe '.by_attributes' do
     #   it 'finds instance based on attribute vector' do
@@ -134,5 +146,6 @@ require 'spec_helper'
     #     end
     #   end
     # end
-#   end
-# end
+  end
+end
+end

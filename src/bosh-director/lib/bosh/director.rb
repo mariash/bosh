@@ -235,8 +235,6 @@ require 'bosh/director/jobs/dynamic_disk/provide_dynamic_disk'
 require 'bosh/director/jobs/dynamic_disk/detach_dynamic_disk'
 require 'bosh/director/jobs/dynamic_disk/delete_dynamic_disk'
 
-require 'bosh/director/api_nats/api'
-
 require 'bosh/director/models/helpers/model_helper'
 
 require 'bosh/director/blobstores'
@@ -285,6 +283,9 @@ require 'bosh/director/api/controllers/links_controller'
 require 'bosh/director/api/controllers/link_address_controller'
 require 'bosh/director/api/controllers/deployed_variables_controller'
 require 'bosh/director/api/route_configuration'
+
+require 'bosh/director/api_nats/api'
+require 'bosh/director/api_nats/dynamic_disk_controller'
 
 require 'bosh/director/step_executor'
 require 'bosh/director/metrics_collector'
