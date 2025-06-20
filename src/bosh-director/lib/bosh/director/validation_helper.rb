@@ -17,10 +17,6 @@ module Bosh::Director
       end
     end
 
-    def safe_value(name, value, options = {})
-      validate_property(name, options, value, PropertyValidationMessage.new)
-    end
-
     private
 
     def validate_property(property, options, result, validation_message)

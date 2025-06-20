@@ -15,29 +15,29 @@ module Bosh::Director
       end
 
       def perform
-        validate_message(@payload)
+      #   validate_message(@payload)
 
-        cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
+      #   cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
-        cloud = Bosh::Director::CloudFactory.create.get(nil)
-        unless cloud.has_disk(@payload['disk_name'])
-          # TODO raise or exit early
-          raise "TODO"
-        end
+      #   cloud = Bosh::Director::CloudFactory.create.get(nil)
+      #   unless cloud.has_disk(@payload['disk_name'])
+      #     # TODO raise or exit early
+      #     raise "TODO"
+      #   end
 
-        # TODO what to do when a disk is still attached? Maybe add a force param?
-        # TODO Map name => cid
-        cloud.delete_disk(disk_name)
+      #   # TODO what to do when a disk is still attached? Maybe add a force param?
+      #   # TODO Map name => cid
+      #   cloud.delete_disk(disk_name)
 
-        response = {
-          'error' => nil,
-        }
-        @nats_rpc.send_message(@reply, response)
+      #   response = {
+      #     'error' => nil,
+      #   }
+      #   @nats_rpc.send_message(@reply, response)
 
-        "deleted disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
-      rescue => e
-        @nats_rpc.send_message(@reply, { 'error' => e.message })
-        raise e
+      #   "deleted disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
+      # rescue => e
+      #   @nats_rpc.send_message(@reply, { 'error' => e.message })
+      #   raise e
       end
 
       private

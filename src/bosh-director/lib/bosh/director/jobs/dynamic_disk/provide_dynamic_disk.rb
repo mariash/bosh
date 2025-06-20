@@ -14,16 +14,14 @@ module Bosh::Director
           @agent_id = agent_id
           @reply = reply
 
-          @deployment = safe_property(payload, "deployment", class: String)
-          @disk_pool_name = safe_property(payload, "disk_pool_name", class: String)
-          @disk_name = safe_property(payload, "disk_name", class: String)
-          @disk_size = safe_property(payload, "disk_size", class: Integer)
-          @metadata = safe_property(payload, "metadata", class: Hash, optional: true)
+          @deployment = payload['deployment']
+          @disk_pool_name = payload['disk_pool_name']
+          @disk_name = payload['disk_name']
+          @disk_size = payload['disk_size']
+          @metadata = payload['metadata']
         end
 
         def perform
-          validate_message
-
           vm = Models::Vm.find(agent_id: @agent_id)
           cloud_properties = find_disk_cloud_properties(vm.instance, @disk_pool_name)
 
@@ -56,16 +54,6 @@ module Bosh::Director
         end
 
         private
-
-        #     def cloud_resize_disk(old_disk_model, new_disk_size)
-        #       cloud = cloud_for_cpi(old_disk_model.instance.active_vm.cpi)
-        #       cloud.resize_disk(old_disk_model.disk_cid, new_disk_size)
-        #     end
-        #
-        #     def cloud_for_cpi(cpi)
-        #       cloud_factory = CloudFactory.create
-        #       cloud_factory.get(cpi)
-        #     end
 
         def find_disk_cloud_properties(vm, disk_pool_name)
           teams = vm.instance.deployment.teams
