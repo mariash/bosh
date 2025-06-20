@@ -8,17 +8,15 @@ module Bosh::Director
           :provide_dynamic_disk
         end
 
-        def initialize(nats_rpc, agent_id, reply, payload)
+        def initialize(agent_id, reply, disk_name, disk_pool_name, disk_size, metadata)
           super()
-          @nats_rpc = nats_rpc
           @agent_id = agent_id
           @reply = reply
 
-          @deployment = payload['deployment']
-          @disk_pool_name = payload['disk_pool_name']
-          @disk_name = payload['disk_name']
-          @disk_size = payload['disk_size']
-          @metadata = payload['metadata']
+          @disk_name = disk_name
+          @disk_pool_name = disk_pool_name
+          @disk_size = disk_size
+          @metadata = metadata
         end
 
         def perform
@@ -38,22 +36,26 @@ module Bosh::Director
             cloud.set_disk_metadata(disk_name, @metadata)
           end
 
-          disk_hint = cloud.attach_disk(vm_cid, disk_name)
+          disk_hint = cloud.attach_disk(vm.cid, disk_name)
 
           response = {
             'error' => nil,
             'disk_name' => disk_name,
             'disk_hint' => disk_hint,
           }
-          @nats_rpc.send_message(@reply, response)
+          nats_rpc.send_message(@reply, response)
 
-          "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@deployment}'"
+          "attached disk '#{disk_name}' to '#{vm.cid}' in deployment '#{vm.instance.deployment.name}'"
         rescue => e
-          @nats_rpc.send_message(@reply, { 'error' => e.message })
+          nats_rpc.send_message(@reply, { 'error' => e.message })
           raise e
         end
 
         private
+
+        def nats_rpc
+          Config.nats_rpc
+        end
 
         def find_disk_cloud_properties(vm, disk_pool_name)
           teams = vm.instance.deployment.teams

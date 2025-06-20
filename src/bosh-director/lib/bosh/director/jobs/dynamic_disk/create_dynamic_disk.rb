@@ -4,13 +4,18 @@ module Bosh::Director
       @queue = :normal
 
       def self.job_type
-        :provide_dynamic_disk
+        :create_dynamic_disk
       end
 
-      def initialize(reply, payload)
+      def initialize(agent_id, reply, disk_name, disk_pool_name, disk_size, metadata)
         super()
+        @agent_id = agent_id
         @reply = reply
-        @payload = payload
+
+        @disk_name = disk_name
+        @disk_pool_name = disk_pool_name
+        @disk_size = disk_size
+        @metadata = metadata
       end
 
       def perform

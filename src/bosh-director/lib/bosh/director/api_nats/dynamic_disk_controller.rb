@@ -11,11 +11,16 @@ module Bosh::Director
       end
 
       def handle_create_disk_request(reply, payload)
+        disk_name = safe_property(payload, "disk_name", class: String, min_length: 1)
+        disk_pool_name = safe_property(payload, "disk_pool_name", class: String, min_length: 1)
+        disk_size = safe_property(payload, "disk_size", class: Integer, min: 1)
+        metadata = safe_property(payload, "metadata", class: Hash, optional: true)
+
         JobQueue.new.enqueue(
           USERNAME,
-          Jobs::CreateDynamicDisk,
+          Jobs::DynamicDisk::CreateDynamicDisk,
           'create dynamic disk',
-          [reply, payload]
+          [reply, disk_name, disk_pool_name, disk_size, metadata]
         )
       rescue => e
         @nats_rpc.send_message(reply, { "error" => e.message })
@@ -23,11 +28,13 @@ module Bosh::Director
       end
 
       def handle_attach_disk_request(agent_id, reply, payload)
+        disk_name = safe_property(payload, "disk_name", class: String, min_length: 1)
+
         JobQueue.new.enqueue(
           USERNAME,
-          Jobs::AttachDynamicDisk,
+          Jobs::DynamicDisk::AttachDynamicDisk,
           'attach dynamic disk',
-          [agent_id, reply, payload]
+          [agent_id, reply, disk_name]
         )
       rescue => e
         @nats_rpc.send_message(reply, { 'error' => e.message })
@@ -35,17 +42,16 @@ module Bosh::Director
       end
 
       def handle_provide_disk_request(agent_id, reply, payload)
-        deployment = safe_property(payload, "deployment", class: String)
-        disk_name = safe_property(payload, "disk_name", class: String)
-        disk_pool_name = safe_property(payload, "disk_pool_name", class: String)
-        disk_size = safe_property(payload, "disk_size", class: Integer)
+        disk_name = safe_property(payload, "disk_name", class: String, min_length: 1)
+        disk_pool_name = safe_property(payload, "disk_pool_name", class: String, min_length: 1)
+        disk_size = safe_property(payload, "disk_size", class: Integer, min: 1)
         metadata = safe_property(payload, "metadata", class: Hash, optional: true)
         
         JobQueue.new.enqueue(
           USERNAME,
           Jobs::DynamicDisk::ProvideDynamicDisk,
           'provide dynamic disk',
-          [agent_id, reply, deployment, disk_name, disk_pool_name, disk_size, metadata]
+          [agent_id, reply, disk_name, disk_pool_name, disk_size, metadata]
         )
       rescue => e
         @nats_rpc.send_message(reply, { "error" => e.message })
@@ -53,11 +59,13 @@ module Bosh::Director
       end
 
       def handle_detach_disk_request(agent_id, reply, payload)
+        disk_name = safe_property(payload, "disk_name", class: String, min_length: 1)
+
         JobQueue.new.enqueue(
           USERNAME,
-          Jobs::DetachDynamicDisk,
+          Jobs::DynamicDisk::DetachDynamicDisk,
           'detach dynamic disk',
-          [agent_id, reply, payload]
+          [agent_id, reply, disk_name]
         )
       rescue => e
         @nats_rpc.send_message(reply, { "error" => e.message })
@@ -65,11 +73,13 @@ module Bosh::Director
       end
 
       def handle_delete_disk_request(reply, payload)
+        disk_name = safe_property(payload, "disk_name", class: String, min_length: 1)
+
         JobQueue.new.enqueue(
           USERNAME,
-          Jobs::DeleteDynamicDisk,
+          Jobs::DynamicDisk::DeleteDynamicDisk,
           'delete dynamic disk',
-          [reply, payload]
+          [reply, disk_name]
         )
       rescue => e
         # TODO is this right? Not sure what the best practice is here in rb

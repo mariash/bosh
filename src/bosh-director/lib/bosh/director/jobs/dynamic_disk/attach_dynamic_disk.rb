@@ -7,11 +7,11 @@ module Bosh::Director
         :provide_dynamic_disk
       end
 
-      def initialize(agent_id, reply, payload)
+      def initialize(agent_id, reply, disk_name)
         super()
         @agent_id = agent_id
         @reply = reply
-        @payload = payload
+        @disk_name = disk_name
       end
 
       def perform
