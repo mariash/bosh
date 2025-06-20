@@ -15,38 +15,38 @@ module Bosh::Director
       end
 
       def perform
-        validate_message(@payload)
+      #   validate_message(@payload)
 
-        cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
+      #   cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
-        cloud = Bosh::Director::CloudFactory.create.get(nil)
-        unless cloud.has_disk(@payload['disk_name'])
-          raise "Could not find disk #{@payload['disk_name']}"
-        end
+      #   cloud = Bosh::Director::CloudFactory.create.get(nil)
+      #   unless cloud.has_disk(@payload['disk_name'])
+      #     raise "Could not find disk #{@payload['disk_name']}"
+      #   end
 
-        # TODO See if we should use the MetadataUpdater abstraction? It seems like overkill.
-        if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-          # TODO implement this
-          # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-          # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
-          cloud.set_disk_metadata(disk_name, @payload['metadata'])
-        end
+      #   # TODO See if we should use the MetadataUpdater abstraction? It seems like overkill.
+      #   if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
+      #     # TODO implement this
+      #     # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
+      #     # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
+      #     cloud.set_disk_metadata(disk_name, @payload['metadata'])
+      #   end
 
-        # TODO record which vm the disk is attached to in the DB
-        vm_cid = Models::Vm.find(agent_id: @agent_id).cid
-        disk_hint = cloud.attach_disk(vm_cid, disk_name)
+      #   # TODO record which vm the disk is attached to in the DB
+      #   vm_cid = Models::Vm.find(agent_id: @agent_id).cid
+      #   disk_hint = cloud.attach_disk(vm_cid, disk_name)
 
-        response = {
-          'error' => nil,
-          'disk_name' => disk_name,
-          'disk_hint' => disk_hint,
-        }
-        nats_client.send_message(@reply, response)
+      #   response = {
+      #     'error' => nil,
+      #     'disk_name' => disk_name,
+      #     'disk_hint' => disk_hint,
+      #   }
+      #   nats_client.send_message(@reply, response)
 
-        "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
-      rescue => e
-        nats_client.send_message(@reply, { 'error' => e.message })
-        raise e
+      #   "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+      # rescue => e
+      #   nats_client.send_message(@reply, { 'error' => e.message })
+      #   raise e
       end
 
       private

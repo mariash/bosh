@@ -15,26 +15,26 @@ module Bosh::Director
       end
 
       def perform
-        validate_message(@payload)
+      #   validate_message(@payload)
 
-        cloud = Bosh::Director::CloudFactory.create.get(nil)
-        unless cloud.has_disk(@payload['disk_name'])
-          raise "Could not find disk #{@payload['disk_name']}"
-        end
+      #   cloud = Bosh::Director::CloudFactory.create.get(nil)
+      #   unless cloud.has_disk(@payload['disk_name'])
+      #     raise "Could not find disk #{@payload['disk_name']}"
+      #   end
 
-        # TODO find disk cid; this may need us to start saving disk state in the db
-        vm_cid = Models::Vm.find(agent_id: @agent_id).cid
-        cloud.detach_disk(vm_cid, @disk.disk_cid)
+      #   # TODO find disk cid; this may need us to start saving disk state in the db
+      #   vm_cid = Models::Vm.find(agent_id: @agent_id).cid
+      #   cloud.detach_disk(vm_cid, @disk.disk_cid)
 
-        response = {
-          'error' => nil,
-        }
-        nats_rpc.send_message(@reply, response)
+      #   response = {
+      #     'error' => nil,
+      #   }
+      #   nats_rpc.send_message(@reply, response)
 
-        "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
-      rescue => e
-        nats_rpc.send_message(@reply, { 'error' => e.message })
-        raise e
+      #   "detached disk '#{disk_name}' from '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+      # rescue => e
+      #   nats_rpc.send_message(@reply, { 'error' => e.message })
+      #   raise e
       end
 
       private

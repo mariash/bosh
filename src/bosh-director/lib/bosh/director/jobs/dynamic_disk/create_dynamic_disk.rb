@@ -14,35 +14,35 @@ module Bosh::Director
       end
 
       def perform
-        validate_message(@payload)
+      #   validate_message(@payload)
 
-        cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
+      #   cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
-        cloud = Bosh::Director::CloudFactory.create.get(nil)
-        if cloud.has_disk(@payload['disk_name'])
-          raise "disk '#{}'"
-          # TODO: save in database
-        end
+      #   cloud = Bosh::Director::CloudFactory.create.get(nil)
+      #   if cloud.has_disk(@payload['disk_name'])
+      #     raise "disk '#{}'"
+      #     # TODO: save in database
+      #   end
 
-        # TODO this still needed?
-        if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-          cloud.set_disk_metadata(disk_name, @payload['metadata'])
-        end
+      #   # TODO this still needed?
+      #   if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
+      #     cloud.set_disk_metadata(disk_name, @payload['metadata'])
+      #   end
 
-        disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, nil)
-        # TODO save disk name to db
+      #   disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, nil)
+      #   # TODO save disk name to db
 
-        response = {
-          'error' => nil,
-          'disk_name' => disk_name,
-          'disk_hint' => disk_hint,
-        }
-        nats_rpc.send_message(@reply, response)
+      #   response = {
+      #     'error' => nil,
+      #     'disk_name' => disk_name,
+      #     'disk_hint' => disk_hint,
+      #   }
+      #   nats_rpc.send_message(@reply, response)
 
-        "created disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
-      rescue => e
-        nats_rpc.send_message(@reply, { 'error' => e.message })
-        raise e
+      #   "created disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
+      # rescue => e
+      #   nats_rpc.send_message(@reply, { 'error' => e.message })
+      #   raise e
       end
 
       private

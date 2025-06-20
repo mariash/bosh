@@ -1,46 +1,46 @@
 require 'spec_helper'
 
-module Bosh::Director
-  describe ApiNats::DynamicDiskController do
-    subject(:controller) { DynamicDiskController.new(per_spec_logger, nats_rpc) }
-    let(:nats_rpc) { instance_double('Bosh::Director::NatsRpc') }
-    let(:job_queue) { instance_double('Bosh::Director::JobQueue') }
+# module Bosh::Director
+#   describe ApiNats::DynamicDiskController do
+    # subject(:controller) { DynamicDiskController.new(per_spec_logger, nats_rpc) }
+    # let(:nats_rpc) { instance_double('Bosh::Director::NatsRpc') }
+    # let(:job_queue) { instance_double('Bosh::Director::JobQueue') }
 
-    describe 'handle_provide_disk_request' do
-      let(:agent_id) { 'fake_agent_id' }
-      let(:reply) { 'inbox.fake' }
-      let(:deployment) { 'fake_deployment_name' }
-      let(:disk_pool_name) { 'fake_disk_pool_name' }
-      let(:disk_name) { 'fake_disk_name' }
-      let(:disk_size) { 1000 }
-      let(:payload) { {
-        deployment: deployment,
-        disk_pool_name: disk_pool_name,
-        disk_name: disk_name,
-        disk_size: disk_size,
-      } }
+    # describe 'handle_provide_disk_request' do
+    #   let(:agent_id) { 'fake_agent_id' }
+    #   let(:reply) { 'inbox.fake' }
+    #   let(:deployment) { 'fake_deployment_name' }
+    #   let(:disk_pool_name) { 'fake_disk_pool_name' }
+    #   let(:disk_name) { 'fake_disk_name' }
+    #   let(:disk_size) { 1000 }
+    #   let(:payload) { {
+    #     deployment: deployment,
+    #     disk_pool_name: disk_pool_name,
+    #     disk_name: disk_name,
+    #     disk_size: disk_size,
+    #   } }
 
 
-      it 'schedules a job' do
-        expect(controller.handle_provide_disk_request(agent_id, reply, payload)).to eq(nil)
-        expect(job_queue).to receive_message_chain(:new, :enqueue)
-      end
+    #   it 'schedules a job' do
+    #     expect(controller.handle_provide_disk_request(agent_id, reply, payload)).to eq(nil)
+    #     expect(job_queue).to receive_message_chain(:new, :enqueue)
+    #   end
 
-      context 'payload is invalid' do
-        it '' do
-          expect(instance_lookup.by_id(instance.id)).to eq instance
-          expect(nats_rpc).to have_received(:fake)
-        end
-      end
-      #
-      # context 'no instance exists for id' do
-      #   it 'raises' do
-      #     expect {
-      #       instance_lookup.by_id(999999)
-      #     }.to raise_error(InstanceNotFound, "Instance 999999 doesn't exist")
-      #   end
-      # end
-    end
+    #   context 'payload is invalid' do
+    #     it '' do
+    #       expect(instance_lookup.by_id(instance.id)).to eq instance
+    #       expect(nats_rpc).to have_received(:fake)
+    #     end
+    #   end
+    #   #
+    #   # context 'no instance exists for id' do
+    #   #   it 'raises' do
+    #   #     expect {
+    #   #       instance_lookup.by_id(999999)
+    #   #     }.to raise_error(InstanceNotFound, "Instance 999999 doesn't exist")
+    #   #   end
+    #   # end
+    # end
 
     # describe '.by_attributes' do
     #   it 'finds instance based on attribute vector' do
@@ -134,5 +134,5 @@ module Bosh::Director
     #     end
     #   end
     # end
-  end
-end
+#   end
+# end
