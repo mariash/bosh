@@ -10,17 +10,7 @@ module Bosh::Director
         @logger = logger
       end
 
-      def handlers
-        {
-          "director.agent.disk.create.*": method(:handle_create_disk_request),
-          "director.agent.disk.attach.*": method(:handle_attach_disk_request),
-          "director.agent.disk.provide.*": method(:handle_provide_disk_request),
-          "director.agent.disk.detach.*": method(:handle_detach_disk_request),
-          "director.agent.disk.delete.*": method(:handle_delete_disk_request),
-        }
-      end
-
-      def handle_create_disk_request(_agent_id, reply, payload)
+      def handle_create_disk_request(reply, payload)
         JobQueue.new.enqueue(
           USERNAME,
           Jobs::CreateDynamicDisk,
@@ -75,7 +65,7 @@ module Bosh::Director
         raise
       end
 
-      def handle_delete_disk_request(_agent_id, reply, payload)
+      def handle_delete_disk_request(reply, payload)
         JobQueue.new.enqueue(
           USERNAME,
           Jobs::DeleteDynamicDisk,

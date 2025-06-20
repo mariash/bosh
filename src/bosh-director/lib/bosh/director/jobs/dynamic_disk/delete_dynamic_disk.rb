@@ -1,7 +1,6 @@
 module Bosh::Director
   module Jobs::DynamicDisk
-    class DeleteDynamicDisk < BaseJob
-
+    class DeleteDynamicDisk < Jobs::BaseJob
       @queue = :normal
 
       def self.job_type
@@ -42,6 +41,9 @@ module Bosh::Director
       end
 
       private
+      def nats_client
+        Config.nats_rpc
+      end
 
       def find_disk_cloud_properties(disk_pool_name)
         configs = Models::Config.latest_set('cloud')
