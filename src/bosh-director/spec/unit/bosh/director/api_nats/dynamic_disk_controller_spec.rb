@@ -5,8 +5,8 @@ module Bosh::Director
     describe DynamicDiskController do
       subject(:controller) { DynamicDiskController.new(per_spec_logger, nats_rpc) }
       let(:nats_rpc) { instance_double('Bosh::Director::NatsRpc') }
-      let(:job_queue) { instance_double('Bosh::Director::JobQueue', enqueue: task) }
       let(:task) { instance_double('Bosh::Director::Models::Task', id: 1) }
+      let(:job_queue) { instance_double('Bosh::Director::JobQueue', enqueue: task) }
 
       before { allow(JobQueue).to receive(:new).and_return(job_queue) }
 
@@ -33,7 +33,7 @@ module Bosh::Director
             Jobs::DynamicDisk::CreateDynamicDisk,
             'create dynamic disk',
             [reply, disk_name, disk_pool_name, disk_size, metadata],
-            ).and_return(task)
+          ).and_return(task)
 
           controller.handle_create_disk_request(reply, payload)
         end
@@ -43,8 +43,8 @@ module Bosh::Director
             let(:disk_pool_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_pool_name'") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -54,8 +54,8 @@ module Bosh::Director
             let(:disk_pool_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_pool_name' length") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -65,8 +65,8 @@ module Bosh::Director
             let(:disk_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -76,8 +76,8 @@ module Bosh::Director
             let(:disk_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -87,8 +87,8 @@ module Bosh::Director
             let(:disk_size) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_size'") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -98,8 +98,8 @@ module Bosh::Director
             let(:disk_size) { 0 }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_size' value") }))
+              expect {
                 controller.handle_create_disk_request(reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -130,8 +130,8 @@ module Bosh::Director
             let(:disk_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
+              expect {
                 controller.handle_attach_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -141,8 +141,8 @@ module Bosh::Director
             let(:disk_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
+              expect {
                 controller.handle_attach_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -166,7 +166,7 @@ module Bosh::Director
             Jobs::DynamicDisk::ProvideDynamicDisk,
             'provide dynamic disk',
             [agent_id, reply, disk_name, disk_pool_name, disk_size, metadata],
-            ).and_return(task)
+          ).and_return(task)
 
           controller.handle_provide_disk_request(agent_id, reply, payload)
         end
@@ -176,8 +176,8 @@ module Bosh::Director
             let(:disk_pool_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_pool_name'") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -187,8 +187,8 @@ module Bosh::Director
             let(:disk_pool_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_pool_name' length") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -198,8 +198,8 @@ module Bosh::Director
             let(:disk_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -209,8 +209,8 @@ module Bosh::Director
             let(:disk_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -220,8 +220,8 @@ module Bosh::Director
             let(:disk_size) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_size'") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -231,8 +231,8 @@ module Bosh::Director
             let(:disk_size) { 0 }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_size' value") }))
+              expect {
                 controller.handle_provide_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -253,7 +253,7 @@ module Bosh::Director
             Jobs::DynamicDisk::DetachDynamicDisk,
             'detach dynamic disk',
             [agent_id, reply, disk_name],
-            ).and_return(task)
+          ).and_return(task)
 
           controller.handle_detach_disk_request(agent_id, reply, payload)
         end
@@ -263,8 +263,8 @@ module Bosh::Director
             let(:disk_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
+              expect {
                 controller.handle_detach_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -274,8 +274,8 @@ module Bosh::Director
             let(:disk_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
+              expect {
                 controller.handle_detach_disk_request(agent_id, reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
@@ -296,7 +296,7 @@ module Bosh::Director
             Jobs::DynamicDisk::DeleteDynamicDisk,
             'delete dynamic disk',
             [reply, disk_name],
-            ).and_return(task)
+          ).and_return(task)
 
           controller.handle_delete_disk_request(reply, payload)
         end
@@ -306,8 +306,8 @@ module Bosh::Director
             let(:disk_name) { nil }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
+              expect {
                 controller.handle_delete_disk_request(reply, payload)
               }.to raise_error(ValidationMissingField)
             end
@@ -317,8 +317,8 @@ module Bosh::Director
             let(:disk_name) { "" }
 
             it 'raises an error' do
-              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({'error' => anything}))
-              expect{
+              expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
+              expect {
                 controller.handle_delete_disk_request(reply, payload)
               }.to raise_error(ValidationViolatedMin)
             end
