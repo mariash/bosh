@@ -1,17 +1,17 @@
 module Bosh::Director
-  module Jobs::DynamicDisk
-    class AttachDynamicDisk < Jobs::BaseJob
+  module Jobs::DynamicDisks
+    class DeleteDynamicDisk < Jobs::BaseJob
       @queue = :normal
 
       def self.job_type
         :provide_dynamic_disk
       end
 
-      def initialize(agent_id, reply, disk_name)
+      def initialize(nats_rpc, reply, payload)
         super()
-        @agent_id = agent_id
+        @nats_rpc = nats_rpc
         @reply = reply
-        @disk_name = disk_name
+        @payload = payload
       end
 
       def perform
@@ -21,36 +21,26 @@ module Bosh::Director
 
       #   cloud = Bosh::Director::CloudFactory.create.get(nil)
       #   unless cloud.has_disk(@payload['disk_name'])
-      #     raise "Could not find disk #{@payload['disk_name']}"
+      #     # TODO raise or exit early
+      #     raise "TODO"
       #   end
 
-      #   # TODO See if we should use the MetadataUpdater abstraction? It seems like overkill.
-      #   if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
-      #     # TODO implement this
-      #     # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-      #     # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
-      #     cloud.set_disk_metadata(disk_name, @payload['metadata'])
-      #   end
-
-      #   # TODO record which vm the disk is attached to in the DB
-      #   vm_cid = Models::Vm.find(agent_id: @agent_id).cid
-      #   disk_hint = cloud.attach_disk(vm_cid, disk_name)
+      #   # TODO what to do when a disk is still attached? Maybe add a force param?
+      #   # TODO Map name => cid
+      #   cloud.delete_disk(disk_name)
 
       #   response = {
       #     'error' => nil,
-      #     'disk_name' => disk_name,
-      #     'disk_hint' => disk_hint,
       #   }
-      #   nats_client.send_message(@reply, response)
+      #   @nats_rpc.send_message(@reply, response)
 
-      #   "attached disk '#{disk_name}' to '#{vm_cid}' in deployment '#{@payload['deployment']}'"
+      #   "deleted disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
       # rescue => e
-      #   nats_client.send_message(@reply, { 'error' => e.message })
+      #   @nats_rpc.send_message(@reply, { 'error' => e.message })
       #   raise e
       end
 
       private
-
       def nats_client
         Config.nats_rpc
       end
@@ -71,6 +61,10 @@ module Bosh::Director
           raise 'Invalid request: `deployment` must be provided'
         elsif payload['disk_name'].nil? || payload['disk_name'].empty?
           raise 'Invalid request: `disk_name` must be provided'
+        elsif payload['disk_size'].nil? || payload['disk_size'] == 0
+          raise 'Invalid request: `disk_size` must be provided'
+        elsif payload['disk_pool_name'].nil? || payload['disk_pool_name'].empty?
+          raise 'Invalid request: `disk_pool_name` must be provided'
         elsif @reply.nil? || @reply.empty?
           raise 'Invalid request: `disk_pool_name` must be provided'
         end

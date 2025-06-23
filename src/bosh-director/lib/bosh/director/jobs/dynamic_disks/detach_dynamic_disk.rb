@@ -1,5 +1,5 @@
 module Bosh::Director
-  module Jobs::DynamicDisk
+  module Jobs::DynamicDisks
     class DetachDynamicDisk < Jobs::BaseJob
       @queue = :normal
 

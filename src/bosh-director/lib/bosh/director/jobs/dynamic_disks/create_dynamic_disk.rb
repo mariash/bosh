@@ -1,17 +1,21 @@
 module Bosh::Director
-  module Jobs::DynamicDisk
-    class DeleteDynamicDisk < Jobs::BaseJob
+  module Jobs::DynamicDisks
+    class CreateDynamicDisk < Jobs::BaseJob
       @queue = :normal
 
       def self.job_type
-        :provide_dynamic_disk
+        :create_dynamic_disk
       end
 
-      def initialize(nats_rpc, reply, payload)
+      def initialize(agent_id, reply, disk_name, disk_pool_name, disk_size, metadata)
         super()
-        @nats_rpc = nats_rpc
+        @agent_id = agent_id
         @reply = reply
-        @payload = payload
+
+        @disk_name = disk_name
+        @disk_pool_name = disk_pool_name
+        @disk_size = disk_size
+        @metadata = metadata
       end
 
       def perform
@@ -20,27 +24,34 @@ module Bosh::Director
       #   cloud_properties = find_disk_cloud_properties(@payload['disk_pool_name'])
 
       #   cloud = Bosh::Director::CloudFactory.create.get(nil)
-      #   unless cloud.has_disk(@payload['disk_name'])
-      #     # TODO raise or exit early
-      #     raise "TODO"
+      #   if cloud.has_disk(@payload['disk_name'])
+      #     raise "disk '#{}'"
+      #     # TODO: save in database
       #   end
 
-      #   # TODO what to do when a disk is still attached? Maybe add a force param?
-      #   # TODO Map name => cid
-      #   cloud.delete_disk(disk_name)
+      #   # TODO this still needed?
+      #   if @payload['metadata'] != nil && cloud.respond_to?(:set_disk_metadata)
+      #     cloud.set_disk_metadata(disk_name, @payload['metadata'])
+      #   end
+
+      #   disk_name = cloud.create_disk(@payload['disk_size'], cloud_properties, nil)
+      #   # TODO save disk name to db
 
       #   response = {
       #     'error' => nil,
+      #     'disk_name' => disk_name,
+      #     'disk_hint' => disk_hint,
       #   }
-      #   @nats_rpc.send_message(@reply, response)
+      #   nats_rpc.send_message(@reply, response)
 
-      #   "deleted disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
+      #   "created disk '#{disk_name}' in deployment '#{@payload['deployment']}'"
       # rescue => e
-      #   @nats_rpc.send_message(@reply, { 'error' => e.message })
+      #   nats_rpc.send_message(@reply, { 'error' => e.message })
       #   raise e
       end
 
       private
+
       def nats_client
         Config.nats_rpc
       end
