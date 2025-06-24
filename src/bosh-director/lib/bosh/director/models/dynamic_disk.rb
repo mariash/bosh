@@ -3,8 +3,17 @@ module Bosh::Director::Models
     many_to_one :deployment
 
     def validate
-      validates_presence [:disk_name, :disk_cid]
-      validates_unique [:disk_name, :disk_cid]
+      validates_presence [:name, :disk_cid]
+      validates_unique [:name, :disk_cid]
+    end
+
+    def metadata
+      result = self.metadata_json
+      result ? JSON.parse(result) : {}
+    end
+
+    def metadata=(metadata)
+      self.metadata_json = JSON.generate(metadata)
     end
 
     def to_s

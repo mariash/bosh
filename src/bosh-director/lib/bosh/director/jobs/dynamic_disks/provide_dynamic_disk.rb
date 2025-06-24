@@ -23,13 +23,13 @@ module Bosh::Director
           vm = Models::Vm.find(agent_id: @agent_id)
           raise "vm for agent `#{@agent_id}` not found" unless vm
           cloud_properties = find_disk_cloud_properties(vm.instance, @disk_pool_name)
-
           cloud = Bosh::Director::CloudFactory.create.get(vm.cpi)
-          unless cloud.has_disk(@disk_name)
-            disk_cid = cloud.create_disk(@disk_size, cloud_properties, vm.cid)
+          disk_model = Models::DynamicDisk.find(name: @disk_name)
 
-            Models::DynamicDisk.create(
-              name: disk.name,
+          if disk_model == nil
+            disk_cid = cloud.create_disk(@disk_size, cloud_properties, vm.cid)
+            disk_model = Models::DynamicDisk.create(
+              name: @disk_name,
               disk_cid: disk_cid,
               deployment_id: vm.instance.deployment.id,
               size: @disk_size,
@@ -38,14 +38,10 @@ module Bosh::Director
             )
           end
 
-          if @metadata != nil && cloud.respond_to?(:set_disk_metadata)
-            # TODO implement this
-            # metadata_updater_cloud = cloud_factory.get(@disk.cpi)
-            # MetadataUpdater.build.update_dynamic_disk_metadata(metadata_updater_cloud, @disk, @tags)
-            cloud.set_disk_metadata(@disk_name, @metadata)
+          disk_hint = cloud.attach_disk(vm.cid, disk_model.disk_cid)
+          if @metadata != nil
+            MetadataUpdater.build.update_dynamic_disk_metadata(cloud, disk_model, @metadata)
           end
-
-          disk_hint = cloud.attach_disk(vm.cid, @disk_name)
 
           response = {
             'error' => nil,

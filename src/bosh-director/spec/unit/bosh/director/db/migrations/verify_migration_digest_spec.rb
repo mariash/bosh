@@ -20,6 +20,10 @@ module Bosh::Director
           filename: '20240319204601_remove_dns_records_from_instances.rb',
           sha1: 'bb637d410772d09caabdb68a1126fbc9f9b4deec',
         },
+        {
+          filename: '20250623223600_add_dynamic_disks.rb',
+          sha1: '4e649fdc2bbc437e2035a0d47be54787aba4534f',
+        },
       ]
     end
 

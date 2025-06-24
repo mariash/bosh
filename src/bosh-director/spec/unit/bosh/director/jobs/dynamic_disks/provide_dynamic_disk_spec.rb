@@ -5,6 +5,7 @@ module Bosh::Director
     let(:agent_id) { 'fake-agent-id' }
     let(:reply) { 'inbox.fake' }
     let(:disk_name) { 'fake-disk-name' }
+    let(:disk_cid) { 'fake-disk-cid' }
     let(:disk_pool_name) { 'fake-disk-pool-name' }
     let(:disk_cloud_properties) { { 'fake-disk-cloud-property-key' => 'fake-disk-cloud-property-value' } }
     let(:disk_size) { 1000 }
@@ -31,20 +32,26 @@ module Bosh::Director
 
     before do
       allow(Config).to receive(:nats_rpc).and_return(nats_rpc)
+      allow(Bosh::Director::Config).to receive(:name).and_return('fake-director-name')
       allow(Bosh::Director::Config).to receive(:cloud_options).and_return('provider' => { 'path' => '/path/to/default/cpi' })
       allow(Bosh::Director::Config).to receive(:preferred_cpi_api_version).and_return(2)
       allow(CloudFactory).to receive(:create).and_return(cloud_factory)
-      allow(cloud).to receive(:has_disk).and_return(true)
       allow(cloud).to receive(:respond_to?).with(:set_disk_metadata).and_return(false)
     end
 
     describe '#perform' do
       context 'when disk exists' do
-        it 'attaches the disk to VM' do
-          expect(cloud).to receive(:has_disk).and_return(true)
-          expect(cloud).to receive(:respond_to?).with(:set_disk_metadata).and_return(false)
-          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_name).and_return(disk_hint)
+        let!(:disk) do
+          FactoryBot.create(
+           :models_dynamic_disk,
+            name: disk_name,
+            disk_cid: disk_cid,
+            deployment: vm.instance.deployment,
+          )
+        end
 
+        it 'attaches the disk to VM' do
+          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_cid).and_return(disk_hint)
           expect(nats_rpc).to receive(:send_message).with(reply, {
             'error' => nil,
             'disk_name' => disk_name,
@@ -55,10 +62,10 @@ module Bosh::Director
       end
 
       context 'when disk does not exist' do
-        it 'create the disk and attaches it to VM' do
-          expect(cloud).to receive(:has_disk).and_return(false)
-          expect(cloud).to receive(:create_disk).with(disk_size, disk_cloud_properties, vm.cid)
-          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_name).and_return(disk_hint)
+        it 'creates the disk and attaches it to VM' do
+          expect(cloud).to receive(:create_disk).with(disk_size, disk_cloud_properties, vm.cid).and_return(disk_cid)
+          expect(cloud).to receive(:respond_to?).with(:set_disk_metadata).and_return(false)
+          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_cid).and_return(disk_hint)
 
           expect(nats_rpc).to receive(:send_message).with(reply, {
             'error' => nil,
@@ -66,6 +73,33 @@ module Bosh::Director
             'disk_hint' => disk_hint,
           })
           expect(provide_dynamic_disk_job.perform).to eq("attached disk '#{disk_name}' to '#{vm.cid}' in deployment '#{vm.instance.deployment.name}'")
+
+          model = Models::DynamicDisk.where(disk_cid: 'fake-disk-cid').first
+          expect(model.name).to eq(disk_name)
+          expect(model.size).to eq(disk_size)
+          expect(model.deployment_id).to eq(vm.instance.deployment.id)
+          expect(model.disk_pool_name).to eq(disk_pool_name)
+          expect(model.metadata).to eq(metadata)
+        end
+      end
+
+      context 'when disk exists in database but not in the cloud' do
+        let!(:disk) do
+          FactoryBot.create(
+            :models_dynamic_disk,
+            name: disk_name,
+            disk_cid: disk_cid,
+            deployment: vm.instance.deployment,
+            )
+        end
+
+        it 'returns an error from attach_disk call' do
+          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_cid).and_raise('Disk not found')
+
+          expect(nats_rpc).to receive(:send_message).with(reply, {
+            'error' => "Disk not found"
+          })
+          expect { provide_dynamic_disk_job.perform }.to raise_error("Disk not found")
         end
       end
 
@@ -93,9 +127,17 @@ module Bosh::Director
 
       context 'when cpi supports set_disk_metadata' do
         it 'sets disk metadata' do
+          expect(cloud).to receive(:create_disk).with(disk_size, disk_cloud_properties, vm.cid).and_return('fake-disk-cid')
           expect(cloud).to receive(:respond_to?).with(:set_disk_metadata).and_return(true)
-          expect(cloud).to receive(:set_disk_metadata).with(disk_name, metadata)
-          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_name).and_return(disk_hint)
+          expect(cloud).to receive(:set_disk_metadata).with(
+            'fake-disk-cid',
+            {
+              "deployment"=> vm.instance.deployment.name,
+              "director"=>'fake-director-name',
+              "fake-key"=>"fake-value"
+            }
+          )
+          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', 'fake-disk-cid').and_return(disk_hint)
 
           expect(nats_rpc).to receive(:send_message).with(reply, {
             'error' => nil,
@@ -130,9 +172,8 @@ module Bosh::Director
         end
 
         it 'gets the disk cloud properties from the latest cloud config for those teams' do
-          expect(cloud).to receive(:has_disk).and_return(false)
-          expect(cloud).to receive(:create_disk).with(disk_size, disk_cloud_properties, vm.cid)
-          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', disk_name).and_return(disk_hint)
+          expect(cloud).to receive(:create_disk).with(disk_size, disk_cloud_properties, vm.cid).and_return('fake-disk-cid')
+          expect(cloud).to receive(:attach_disk).with('fake-vm-cid', 'fake-disk-cid').and_return(disk_hint)
           expect(nats_rpc).to receive(:send_message).with(reply, {
             'error' => nil,
             'disk_name' => disk_name,
