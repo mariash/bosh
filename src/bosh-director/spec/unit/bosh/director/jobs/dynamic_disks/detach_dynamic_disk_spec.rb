@@ -64,6 +64,17 @@ module Bosh::Director
             expect(detach_dynamic_disk_job.perform).to eq("detached disk `#{disk_cid}` from vm `#{vm.cid}`")
             expect(Models::DynamicDisk.find(disk_cid: disk_cid).vm_id).to be_nil
           end
+
+          context 'when disk is already detached' do
+            it 'returns an error' do
+              expect(cloud).to receive(:detach_disk).with(vm.cid, disk_cid).and_raise(Bosh::Clouds::DiskNotAttached.new(false))
+              expect(nats_rpc).to receive(:send_message).with(reply, {
+                'error' => nil
+              })
+              expect(detach_dynamic_disk_job.perform).to eq("disk `#{disk_cid}` was already detached")
+              expect(Models::DynamicDisk.find(disk_cid: disk_cid).vm_id).to be_nil
+            end
+          end
         end
       end
 

@@ -29,14 +29,16 @@ module Bosh::Director
           disk_model.update(vm_id: nil)
         end
 
-        response = { 'error' => nil }
-        nats_rpc.send_message(@reply, response)
-
+        nats_rpc.send_message(@reply, { 'error' => nil })
         if vm.nil?
           "disk `#{disk_model.disk_cid}` was already detached"
         else
           "detached disk `#{disk_model.disk_cid}` from vm `#{vm.cid}`"
         end
+      rescue Bosh::Clouds::DiskNotAttached
+        disk_model.update(vm_id: nil)
+        nats_rpc.send_message(@reply, { 'error' => nil })
+        "disk `#{disk_model.disk_cid}` was already detached"
       rescue => e
         nats_rpc.send_message(@reply, { 'error' => e.message })
         raise e
