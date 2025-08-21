@@ -153,6 +153,23 @@ module Bosh::Director
           end
         end
 
+        context 'when user has bosh.dynamic_disks.update scope' do
+          before { basic_authorize('dynamic-disks-updater', 'dynamic-disks-updater') }
+
+          it 'enqueues a ProvideDynamicDisk task' do
+            expect_any_instance_of(Bosh::Director::JobQueue).to receive(:enqueue).with(
+              'dynamic-disks-updater',
+              Jobs::DynamicDisks::DetachDynamicDisk,
+              'detach dynamic disk',
+              ['disk_name'],
+              ).and_call_original
+
+            post '/disk_name/detach'
+
+            expect_redirect_to_queued_task(last_response)
+          end
+        end
+
         context 'user has admin permissions' do
           before { authorize 'admin', 'admin' }
 
@@ -180,6 +197,31 @@ module Bosh::Director
           end
         end
 
+        context 'when user has bosh.dynamic_disks.update scope' do
+          before { basic_authorize('dynamic-disks-updater', 'dynamic-disks-updater') }
+
+          it 'forbids access' do
+            expect(delete('/disk_name').status).to eq(401)
+          end
+        end
+
+        context 'when user has bosh.dynamic_disks.delete scope' do
+          before { authorize 'dynamic-disks-deleter', 'dynamic-disks-deleter' }
+
+          it 'enqueues a ProvideDynamicDisk task' do
+            expect_any_instance_of(Bosh::Director::JobQueue).to receive(:enqueue).with(
+              'dynamic-disks-deleter',
+              Jobs::DynamicDisks::DeleteDynamicDisk,
+              'delete dynamic disk',
+              ['disk_name'],
+              ).and_call_original
+
+            delete '/disk_name'
+
+            expect_redirect_to_queued_task(last_response)
+          end
+        end
+
         context 'user has admin permissions' do
           before { authorize 'admin', 'admin' }
 
@@ -195,7 +237,6 @@ module Bosh::Director
 
             expect_redirect_to_queued_task(last_response)
           end
-
         end
       end
     end
