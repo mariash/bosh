@@ -137,6 +137,7 @@ module Bosh::Director
           it_acts_as_asynchronous_message :add_persistent_disk
           it_acts_as_asynchronous_message :remove_persistent_disk
           it_acts_as_asynchronous_message :add_dynamic_disk
+          it_acts_as_asynchronous_message :remove_dynamic_disk
         end
 
         describe 'update_settings' do
@@ -298,6 +299,18 @@ module Bosh::Director
                 '#<Bosh::Director::RpcRemoteException: unknown message add_dynamic_disk>',
               )
             expect { client.add_dynamic_disk('diskCID', 'hint') }.to_not raise_error
+          end
+        end
+
+        describe 'remove_dynamic_disk' do
+          it 'logs a warning if the message is not handled' do
+            allow(client).to receive(:handle_method).and_raise(RpcRemoteException, 'unknown message remove_dynamic_disk')
+
+            expect(Config.logger).to receive(:warn).with(
+              "Ignoring remove_dynamic_disk 'unknown message' error from the agent: "\
+                '#<Bosh::Director::RpcRemoteException: unknown message remove_dynamic_disk>',
+              )
+            expect { client.remove_dynamic_disk('diskCID') }.to_not raise_error
           end
         end
 

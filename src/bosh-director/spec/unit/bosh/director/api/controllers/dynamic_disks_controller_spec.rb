@@ -32,9 +32,6 @@ module Bosh::Director
                     })
         end
 
-        let(:instance) { FactoryBot.create(:models_instance) }
-        let!(:vm) { FactoryBot.create(:models_vm, instance: instance, active: true) }
-
         context 'when user is reader' do
           before { basic_authorize('reader', 'reader') }
 
@@ -75,7 +72,7 @@ module Bosh::Director
             end
 
             context 'disk_pool_name is empty' do
-              let(:disk_pool_name) { "" }
+              let(:disk_pool_name) { '' }
 
               it 'raises an error' do
                 post '/provide', content, { 'CONTENT_TYPE' => 'application/json' }
@@ -103,7 +100,7 @@ module Bosh::Director
             end
 
             context 'disk_name is empty' do
-              let(:disk_name) { "" }
+              let(:disk_name) { '' }
 
               it 'raises an error' do
                 post '/provide', content, { 'CONTENT_TYPE' => 'application/json' }
@@ -147,91 +144,60 @@ module Bosh::Director
         end
       end
 
-      # describe 'handle_detach_disk_request' do
-      #   let(:payload) do
-      #     {
-      #       'disk_name' => disk_name,
-      #     }.compact
-      #   end
-      #
-      #   it 'enqueues a DetachDynamicDisk task' do
-      #     expect(job_queue).to receive(:enqueue).with(
-      #       'bosh-agent',
-      #       Jobs::DynamicDisks::DetachDynamicDisk,
-      #       'detach dynamic disk',
-      #       [reply, disk_name],
-      #     ).and_return(task)
-      #
-      #     controller.handle_detach_disk_request(agent_id, reply, payload)
-      #   end
-      #
-      #   context 'payload is invalid' do
-      #     context 'disk_name is nil' do
-      #       let(:disk_name) { nil }
-      #
-      #       it 'raises an error' do
-      #         expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
-      #         expect {
-      #           controller.handle_detach_disk_request(agent_id, reply, payload)
-      #         }.to raise_error(ValidationMissingField)
-      #       end
-      #     end
-      #
-      #     context 'disk_name is empty' do
-      #       let(:disk_name) { "" }
-      #
-      #       it 'raises an error' do
-      #         expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
-      #         expect {
-      #           controller.handle_detach_disk_request(agent_id, reply, payload)
-      #         }.to raise_error(ValidationViolatedMin)
-      #       end
-      #     end
-      #   end
-      # end
-      #
-      # describe 'handle_delete_disk_request' do
-      #   let(:payload) do
-      #     {
-      #       'disk_name' => disk_name,
-      #     }.compact
-      #   end
-      #
-      #   it 'enqueues a DeleteDynamicDisk task' do
-      #     expect(job_queue).to receive(:enqueue).with(
-      #       'bosh-agent',
-      #       Jobs::DynamicDisks::DeleteDynamicDisk,
-      #       'delete dynamic disk',
-      #       [reply, disk_name],
-      #     ).and_return(task)
-      #
-      #     controller.handle_delete_disk_request(reply, payload)
-      #   end
-      #
-      #   context 'payload is invalid' do
-      #     context 'disk_name is nil' do
-      #       let(:disk_name) { nil }
-      #
-      #       it 'raises an error' do
-      #         expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("Required property 'disk_name'") }))
-      #         expect {
-      #           controller.handle_delete_disk_request(reply, payload)
-      #         }.to raise_error(ValidationMissingField)
-      #       end
-      #     end
-      #
-      #     context 'disk_name is empty' do
-      #       let(:disk_name) { "" }
-      #
-      #       it 'raises an error' do
-      #         expect(nats_rpc).to receive(:send_message).with(reply, hash_including({ 'error' => a_string_matching("'disk_name' length") }))
-      #         expect {
-      #           controller.handle_delete_disk_request(reply, payload)
-      #         }.to raise_error(ValidationViolatedMin)
-      #       end
-      #     end
-      #   end
-      # end
+      describe 'POST', '/:disk_name/detach' do
+        context 'when user is reader' do
+          before { basic_authorize('reader', 'reader') }
+
+          it 'forbids access' do
+            expect(post('/disk_name/detach').status).to eq(401)
+          end
+        end
+
+        context 'user has admin permissions' do
+          before { authorize 'admin', 'admin' }
+
+          it 'enqueues a ProvideDynamicDisk task' do
+            expect_any_instance_of(Bosh::Director::JobQueue).to receive(:enqueue).with(
+              'admin',
+              Jobs::DynamicDisks::DetachDynamicDisk,
+              'detach dynamic disk',
+              ['disk_name'],
+              ).and_call_original
+
+            post '/disk_name/detach'
+
+            expect_redirect_to_queued_task(last_response)
+          end
+        end
+      end
+
+      describe 'DELETE', '/:disk_name' do
+        context 'when user is reader' do
+          before { basic_authorize('reader', 'reader') }
+
+          it 'forbids access' do
+            expect(delete('/disk_name').status).to eq(401)
+          end
+        end
+
+        context 'user has admin permissions' do
+          before { authorize 'admin', 'admin' }
+
+          it 'enqueues a ProvideDynamicDisk task' do
+            expect_any_instance_of(Bosh::Director::JobQueue).to receive(:enqueue).with(
+              'admin',
+              Jobs::DynamicDisks::DeleteDynamicDisk,
+              'delete dynamic disk',
+              ['disk_name'],
+              ).and_call_original
+
+            delete '/disk_name'
+
+            expect_redirect_to_queued_task(last_response)
+          end
+
+        end
+      end
     end
   end
 end

@@ -119,6 +119,10 @@ module Bosh::Director
       safe_send_message(:add_dynamic_disk, *args)
     end
 
+    def remove_dynamic_disk(*args)
+      safe_send_message(:remove_dynamic_disk, *args)
+    end
+
     def shutdown
       fire_and_forget(:shutdown)
     end
