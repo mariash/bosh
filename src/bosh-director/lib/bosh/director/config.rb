@@ -187,6 +187,8 @@ module Bosh::Director
 
         @network_lifecycle_enabled = config.fetch('networks', {}).fetch('enable_cpi_management', false)
 
+        @dynamic_disks_enabled = config.fetch('dynamic_disks', {}).fetch('enabled', false)
+
         # UUID in config *must* only be used for tests
         @uuid = config['uuid'] || Bosh::Director::Models::DirectorAttribute.find_or_create_uuid(@logger)
         @logger.info("Director UUID: #{@uuid}")
@@ -271,6 +273,10 @@ module Bosh::Director
 
       def network_lifecycle_enabled?
         !!@network_lifecycle_enabled
+      end
+
+      def dynamic_disks_enabled?
+        !!@dynamic_disks_enabled
       end
 
       def local_dns_include_index?

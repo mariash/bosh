@@ -271,11 +271,15 @@ RSpec.describe 'director templates' do
       let(:rendered_template) { template.render(properties) }
 
       let(:enable_dedicated_status_worker) { false }
+      let(:dynamic_disks_enabled) { false }
       let(:dynamic_disks_workers) { 0 }
       let(:properties) do
         properties = default_properties.dup
         properties['director']['enable_dedicated_status_worker'] = enable_dedicated_status_worker
-        properties['director']['dynamic_disks_workers'] = dynamic_disks_workers
+        properties['director']['dynamic_disks'] = {
+          'enabled' => dynamic_disks_enabled,
+          'workers' => dynamic_disks_workers,
+        }
         properties
       end
 
@@ -287,6 +291,7 @@ RSpec.describe 'director templates' do
       end
 
       context 'dynamic disks workers' do
+        let(:dynamic_disks_enabled) { true }
         let(:dynamic_disks_workers) { 2 }
 
         it 'renders to drain all jobs' do
@@ -309,6 +314,7 @@ RSpec.describe 'director templates' do
         end
 
         context 'dynamic disks workers' do
+          let(:dynamic_disks_enabled) { true }
           let(:dynamic_disks_workers) { 2 }
 
           it 'renders to drain normal jobs, then dynamic_disks jobs and then the rest' do

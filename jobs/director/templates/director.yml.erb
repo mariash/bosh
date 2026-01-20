@@ -25,6 +25,9 @@ params = {
   'snapshots' => {
     'enabled'=> p('director.enable_snapshots')
   },
+  'dynamic_disks' => {
+    'enabled' => p('director.dynamic_disks.enabled'),
+  },
   'max_vm_create_tries' => p('director.max_vm_create_tries'),
   'enable_nats_delivered_templates' => p('director.enable_nats_delivered_templates'),
   'enable_pre_ruby_3_2_equal_tilde_behavior' => p('director.enable_pre_ruby_3_2_equal_tilde_behavior'),

@@ -9,5 +9,21 @@ module Bosh::Director
     it 'creates controllers' do
       expect { route_configuration.controllers }.not_to raise_error
     end
+
+    context 'when dynamic disks are enabled' do
+      before { allow(Config).to receive(:dynamic_disks_enabled?).and_return(true) }
+
+      it 'configures dynamic disks controller' do
+        expect(route_configuration.controllers).to include('/dynamic_disks')
+      end
+    end
+
+    context 'when dynamic disks are disabled' do
+      before { allow(Config).to receive(:dynamic_disks_enabled?).and_return(false) }
+
+      it 'does not configure dynamic disks controller' do
+        expect(route_configuration.controllers).not_to include('/dynamic_disks')
+      end
+    end
   end
 end

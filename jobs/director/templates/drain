@@ -37,15 +37,17 @@ stop_dedicated_worker () { stop_worker "$@"; }
   <% end %>
 <% end %>
 
-<% (1..p('director.dynamic_disks_workers')).each do |index| %>
+<% if p('director.dynamic_disks.enabled') %>
+<% (1..p('director.dynamic_disks.workers')).each do |index| %>
   stop_worker dynamic_disks_worker_<%= index %>
+<% end %>
 <% end %>
 
 <% if dedicated_workers > 0 %>
   /var/vcap/packages/director/bin/bosh-director-drain-workers -c /var/vcap/jobs/director/config/director.yml --queue normal \
     2>>$LOG_DIR/drain.stderr.log
 
-  <% if p('director.dynamic_disks_workers') > 0 %>
+  <% if p('director.dynamic_disks.workers') > 0 %>
       /var/vcap/packages/director/bin/bosh-director-drain-workers -c /var/vcap/jobs/director/config/director.yml --queue dynamic_disks \
         2>>$LOG_DIR/drain.stderr.log
   <% end %>

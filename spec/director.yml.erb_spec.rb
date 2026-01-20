@@ -58,6 +58,9 @@ RSpec.describe 'director.yml.erb' do
           'include_index' => false,
           'use_dns_addresses' => true,
         },
+        "dynamic_disks" => {
+          "enabled" => true,
+        },
         'ignore_missing_gateway' => false,
         'disks' => {
           'max_orphaned_age_in_days' => 3,
@@ -151,6 +154,12 @@ RSpec.describe 'director.yml.erb' do
           expect(parsed_yaml['local_dns']['enabled']).to eq(true)
           expect(parsed_yaml['local_dns']['include_index']).to eq(false)
           expect(parsed_yaml['local_dns']['use_dns_addresses']).to eq(true)
+        end
+      end
+
+      describe 'dynamic_disks' do
+        it 'configures dynamic disks values' do
+          expect(parsed_yaml['dynamic_disks']['enabled']).to eq(true)
         end
       end
 

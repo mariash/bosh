@@ -13,13 +13,15 @@ check process worker_<%= index %>
   depends on director
 <% end %>
 
-<% (1..(p('director.dynamic_disks_workers'))).each do |index| %>
+<% if p('director.dynamic_disks.enabled') %>
+<% (1..(p('director.dynamic_disks.workers'))).each do |index| %>
 check process dynamic_disks_worker_<%= index %>
   with pidfile /var/vcap/sys/run/director/dynamic_disks_worker_<%= index %>.pid
   start program "/var/vcap/jobs/director/bin/worker_ctl start dynamic_disks_worker_<%= index %> dynamic_disks"
   stop program "/var/vcap/jobs/director/bin/worker_ctl stop dynamic_disks_worker_<%= index %> dynamic_disks"
   group vcap
   depends on director
+<% end %>
 <% end %>
 
 check process director_scheduler
