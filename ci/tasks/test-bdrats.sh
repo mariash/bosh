@@ -18,11 +18,32 @@ if [[ -e ${OVERRIDDEN_BOSH_DEPLOYMENT}/bosh.yml ]];then
   export BOSH_DEPLOYMENT_PATH=${OVERRIDDEN_BOSH_DEPLOYMENT}
 fi
 
-source start-bosh \
-  -o bbr.yml \
-  -o local-bosh-release-tarball.yml \
-  -o hm/disable.yml \
-  -v local_bosh_release="${BOSH_RELEASE_PATH}"
+MAX_ATTEMPTS=3
+ATTEMPT=1
+
+while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+  echo "Starting BOSH (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
+
+  if source start-bosh \
+    -o bbr.yml \
+    -o local-bosh-release-tarball.yml \
+    -o hm/disable.yml \
+    -v local_bosh_release="${BOSH_RELEASE_PATH}"; then
+    echo "BOSH started successfully"
+    break
+  else
+    echo "BOSH start failed on attempt $ATTEMPT"
+    if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+      echo "Retrying in 5 seconds..."
+      sleep 5
+    else
+      echo "All attempts failed"
+      exit 1
+    fi
+  fi
+
+  ATTEMPT=$((ATTEMPT + 1))
+done
 
 source /tmp/local-bosh/director/env
 
