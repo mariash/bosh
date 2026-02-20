@@ -38,7 +38,11 @@ Dir.mktmpdir do |workspace|
         destroy_containers_on_start: true,
         graph_cleanup_threshold_in_mb: "0",
         listen_address: "127.0.0.1:7777",
-        listen_network: "tcp"
+        listen_network: "tcp",
+        device_cgroup_rules: [
+          "b *:* rwm",
+          "c *:* rwm"
+        ]
       }
     }
   }
