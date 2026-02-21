@@ -22,7 +22,7 @@ cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
   path: /resource_pools/name=vms/stemcell?
   type: replace
   value:
-    url: file://((local_stemcell_url))
+    url: file:///((local_stemcell_url))
 - path: /instance_groups/name=bosh/properties/warden_cpi/start_containers_with_systemd?
   type: replace
   value: false
