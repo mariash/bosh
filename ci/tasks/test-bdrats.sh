@@ -17,7 +17,7 @@ export BOSH_DEPLOYMENT_PATH="${src_dir}/bosh-deployment"
 
 STEMCELL_PATH="${PWD}/stemcell/$(basename stemcell/*.tgz)"
 
-cat > "${BOSH_DEPLOYMENT_PATH}/jammy-local-stemcell.yml" <<'OPSEOF'
+cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
 - name: stemcell
   path: /resource_pools/name=vms/stemcell?
   type: replace
