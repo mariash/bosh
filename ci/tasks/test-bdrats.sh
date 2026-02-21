@@ -52,7 +52,7 @@ STEMCELL_PATH="${PWD}/stemcell/$(basename stemcell/*.tgz)"
 BOSH_SSH_KEY="$(bosh int /tmp/local-bosh/director/creds.yml --path /jumpbox_ssh/private_key --json | jq .Blocks[0])"
 BOSH_HOST="${BOSH_ENVIRONMENT}"
 
-stemcell_os="ubuntu-noble"
+stemcell_os="ubuntu-jammy"
 bosh_ca_cert_json_value="$(awk '{printf "%s\\n", $0}' "${BOSH_CA_CERT}")"
 
 cat > integration-config.json <<EOF
