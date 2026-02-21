@@ -23,12 +23,6 @@ cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
   type: replace
   value:
     url: ((local_stemcell_url))
-- path: /instance_groups/name=bosh/properties/warden_cpi/start_containers_with_systemd?
-  type: replace
-  value: false
-- path: /cloud_provider/properties/warden_cpi/start_containers_with_systemd?
-  type: replace
-  value: false
 OPSEOF
 
 # Retry start-bosh up to 3 times
