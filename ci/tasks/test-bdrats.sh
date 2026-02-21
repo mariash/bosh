@@ -13,10 +13,23 @@ export BBR_BINARY_PATH="${PWD}/bbr-binary/bbr"
 cp bbr-cli-binary/bbr-[0-9]*-linux-amd64 "${BBR_BINARY_PATH}"
 chmod +x "${BBR_BINARY_PATH}"
 
-export OVERRIDDEN_BOSH_DEPLOYMENT="${src_dir}/bosh-deployment"
-if [[ -e ${OVERRIDDEN_BOSH_DEPLOYMENT}/bosh.yml ]];then
-  export BOSH_DEPLOYMENT_PATH=${OVERRIDDEN_BOSH_DEPLOYMENT}
-fi
+export BOSH_DEPLOYMENT_PATH="${src_dir}/bosh-deployment"
+
+STEMCELL_PATH="${PWD}/stemcell/$(basename stemcell/*.tgz)"
+
+cat > "${BOSH_DEPLOYMENT_PATH}/jammy-local-stemcell.yml" <<'OPSEOF'
+- name: stemcell
+  path: /resource_pools/name=vms/stemcell?
+  type: replace
+  value:
+    url: file://((local_stemcell_url))
+- path: /instance_groups/name=bosh/properties/warden_cpi/start_containers_with_systemd?
+  type: replace
+  value: false
+- path: /cloud_provider/properties/warden_cpi/start_containers_with_systemd?
+  type: replace
+  value: false
+OPSEOF
 
 # Retry start-bosh up to 3 times
 MAX_ATTEMPTS=3
@@ -27,7 +40,9 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     -o bbr.yml \
     -o local-bosh-release-tarball.yml \
     -o hm/disable.yml \
-    -v local_bosh_release="${BOSH_RELEASE_PATH}"; then
+    -o local-stemcell.yml \
+    -v local_bosh_release="${BOSH_RELEASE_PATH}" \
+    -v local_stemcell_url="file://${STEMCELL_PATH}"; then
     
     echo "BOSH started successfully, sourcing environment..."
     source /tmp/local-bosh/director/env
@@ -48,7 +63,6 @@ done
 
 source /tmp/local-bosh/director/env
 
-STEMCELL_PATH="${PWD}/stemcell/$(basename stemcell/*.tgz)"
 BOSH_SSH_KEY="$(bosh int /tmp/local-bosh/director/creds.yml --path /jumpbox_ssh/private_key --json | jq .Blocks[0])"
 BOSH_HOST="${BOSH_ENVIRONMENT}"
 
