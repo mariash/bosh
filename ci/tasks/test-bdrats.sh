@@ -38,7 +38,8 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     -o hm/disable.yml \
     -o local-stemcell.yml \
     -v local_bosh_release="${BOSH_RELEASE_PATH}" \
-    -v local_stemcell_url="${STEMCELL_PATH}"; then
+    -v local_stemcell_url="${STEMCELL_PATH}" \
+    -v local_stemcell_sha1="${STEMCELL_SHA1}"; then
     
     echo "BOSH started successfully, sourcing environment..."
     source /tmp/local-bosh/director/env

@@ -643,6 +643,7 @@ jobs:
               database-metadata: brats-terraform
             privileged: true
             params:
+              DEBUG: "true"
               RDS_MYSQL_EXTERNAL_DB_USER: ((brats_database_user.username))
               RDS_MYSQL_EXTERNAL_DB_PASSWORD: ((brats_database_user.password))
               RDS_MYSQL_EXTERNAL_DB_NAME: brats
