@@ -15,7 +15,7 @@ chmod +x "${BBR_BINARY_PATH}"
 
 export BOSH_DEPLOYMENT_PATH="${src_dir}/bosh-deployment"
 
-STEMCELL_PATH="${STEMCELL_PATH:-${PWD}/stemcell/$(basename stemcell/*.tgz)}"
+STEMCELL_PATH="${STEMCELL_PATH:-file://${PWD}/stemcell/$(basename stemcell/*.tgz)}"
 
 cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
 - name: stemcell
@@ -36,7 +36,7 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     -o hm/disable.yml \
     -o local-stemcell.yml \
     -v local_bosh_release="${BOSH_RELEASE_PATH}" \
-    -v local_stemcell_url="file://${STEMCELL_PATH}"; then
+    -v local_stemcell_url="${STEMCELL_PATH}"; then
     
     echo "BOSH started successfully, sourcing environment..."
     source /tmp/local-bosh/director/env
