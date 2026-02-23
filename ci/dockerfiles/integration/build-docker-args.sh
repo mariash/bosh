@@ -7,7 +7,7 @@ export LANG="en_US.UTF-8"
 export LC_ALL="${LANG}"
 export TZ="Etc/UTC"
 apt-get update -y
-apt-get install -y --no-install-recommends ca-certificates curl jq
+apt-get install -y --no-install-recommends wget ca-certificates curl jq
 
 wget -q https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
 chmod +x /usr/local/bin/yq
