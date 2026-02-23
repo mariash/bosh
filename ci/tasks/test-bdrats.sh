@@ -16,6 +16,7 @@ chmod +x "${BBR_BINARY_PATH}"
 export BOSH_DEPLOYMENT_PATH="${src_dir}/bosh-deployment"
 
 STEMCELL_PATH="${STEMCELL_PATH:-file://${PWD}/stemcell/$(basename stemcell/*.tgz)}"
+STEMCELL_SHA1="${STEMCELL_SHA1:-$(sha1sum "${PWD}/stemcell/$(basename stemcell/*.tgz)" | awk '{print $1}')}"
 
 cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
 - name: stemcell
@@ -23,6 +24,7 @@ cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
   type: replace
   value:
     url: ((local_stemcell_url))
+    sha1: ((local_stemcell_sha1))
 OPSEOF
 
 # Retry start-bosh up to 3 times
