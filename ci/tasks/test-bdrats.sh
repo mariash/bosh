@@ -36,7 +36,7 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     -o bbr.yml \
     -o local-bosh-release-tarball.yml \
     -o hm/disable.yml \
-    -o warden/use-jammy.yml \
+    -o local-stemcell.yml \
     -v local_bosh_release="${BOSH_RELEASE_PATH}" \
     -v local_stemcell_url="${STEMCELL_PATH}" \
     -v local_stemcell_sha1="${STEMCELL_SHA1}"; then
