@@ -7,7 +7,7 @@ export LANG="en_US.UTF-8"
 export LC_ALL="${LANG}"
 export TZ="Etc/UTC"
 apt-get update -y
-apt-get install -y --no-install-recommends ca-certificates curl jq yq
+apt-get install -y --no-install-recommends ca-certificates curl jq
 
 bosh_cli_url="$(curl -H "Authorization: token ${GITHUB_ACCESS_TOKEN}" -s https://api.github.com/repos/cloudfoundry/bosh-cli/releases/latest \
                 | jq -r '.assets[] | select(.name | contains ("linux-amd64")) | .browser_download_url')"
