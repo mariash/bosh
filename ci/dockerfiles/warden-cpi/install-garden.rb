@@ -39,6 +39,9 @@ Dir.mktmpdir do |workspace|
         graph_cleanup_threshold_in_mb: "0",
         listen_address: "127.0.0.1:7777",
         listen_network: "tcp",
+        dns_servers: [
+          "192.168.111.155"
+        ],
         device_cgroup_rules: [
           "b *:* rwm",
           "c *:* rwm"
