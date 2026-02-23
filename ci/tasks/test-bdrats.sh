@@ -15,7 +15,7 @@ chmod +x "${BBR_BINARY_PATH}"
 
 export BOSH_DEPLOYMENT_PATH="${src_dir}/bosh-deployment"
 
-STEMCELL_PATH="${PWD}/stemcell/$(basename stemcell/*.tgz)"
+STEMCELL_PATH="${STEMCELL_PATH:-${PWD}/stemcell/$(basename stemcell/*.tgz)}"
 
 cat > "${BOSH_DEPLOYMENT_PATH}/local-stemcell.yml" <<'OPSEOF'
 - name: stemcell

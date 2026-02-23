@@ -12,3 +12,6 @@ inputs:
 
 run:
   path: bosh-ci/ci/tasks/test-bdrats.sh
+
+params:
+  STEMCELL_PATH:
