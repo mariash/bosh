@@ -82,7 +82,18 @@ if [ "${USE_LOCAL_RELEASES:="true"}" != "false" ]; then
   additional_ops_files="-o /usr/local/local-releases.yml"
 fi
 
-pushd "${BOSH_DEPLOYMENT_PATH:-/usr/local/bosh-deployment}" > /dev/null
+HOST_DNS=$(grep nameserver /etc/resolv.conf | grep -v 127.0.0 | head -1 | awk '{print $2}')
+
+bosh_deployment_path="${BOSH_DEPLOYMENT_PATH:-/usr/local/bosh-deployment}"
+
+cat > "${bosh_deployment_path}/dns-ops.yml" <<'OPSEOF'
+- type: replace
+  path: /networks/name=default/subnets/0/dns
+  value:
+  - ((dns_server))
+OPSEOF
+
+pushd "${bosh_deployment_path}" > /dev/null
   export BOSH_DIRECTOR_IP="192.168.56.6"
 
   mkdir -p ${local_bosh_dir}
@@ -93,6 +104,8 @@ pushd "${BOSH_DEPLOYMENT_PATH:-/usr/local/bosh-deployment}" > /dev/null
     -o warden/cpi.yml \
     -o uaa.yml \
     -o credhub.yml \
+    -o dns-ops.yml \
+    -v dns_server="${HOST_DNS}" \
     -o jumpbox-user.yml \
     ${additional_ops_files} \
     -v director_name=bosh-lite \
@@ -122,7 +135,7 @@ EOF
       echo "Source '${local_bosh_dir}/env' to run bosh" >&2
   source "${local_bosh_dir}/env"
 
-  bosh -n update-cloud-config warden/cloud-config.yml
+  bosh -n update-cloud-config warden/cloud-config.yml -o "${bosh_deployment_path}/dns-ops.yml" -v dns_server="${HOST_DNS}"
 
   ip route add   10.244.0.0/15 via ${BOSH_DIRECTOR_IP}
 
