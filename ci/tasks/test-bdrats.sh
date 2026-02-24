@@ -32,7 +32,7 @@ MAX_ATTEMPTS=3
 for attempt in $(seq 1 $MAX_ATTEMPTS); do
   echo "Starting BOSH (attempt $attempt/$MAX_ATTEMPTS)..."
   
-  if bash start-bosh \
+  if start-bosh \
     -o bbr.yml \
     -o local-bosh-release-tarball.yml \
     -o hm/disable.yml \

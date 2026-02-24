@@ -13,6 +13,11 @@ garden_archive_path = ARGV[0]
   /var/vcap/data/tmp
 ].each { |path| FileUtils.mkdir_p path }
 
+host_dns = File.readlines("/etc/resolv.conf")
+  .grep(/^nameserver/)
+  .reject { |line| line.include?("127.0.0") }
+  .first&.split&.last
+
 installed_garden_job_path = File.join("/", "var", "vcap", "jobs", "garden")
 
 Dir.mktmpdir do |workspace|
@@ -40,7 +45,7 @@ Dir.mktmpdir do |workspace|
         listen_address: "127.0.0.1:7777",
         listen_network: "tcp",
         dns_servers: [
-          "192.168.111.155"
+          "#{host_dns}"
         ],
         device_cgroup_rules: [
           "b *:* rwm",
