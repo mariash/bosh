@@ -45,7 +45,7 @@ Dir.mktmpdir do |workspace|
         listen_address: "127.0.0.1:7777",
         listen_network: "tcp",
         dns_servers: [
-          "#{host_dns}"
+          dns_servers: [host_dns || "8.8.8.8"],
         ],
         device_cgroup_rules: [
           "b *:* rwm",
