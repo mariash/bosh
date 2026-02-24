@@ -51,6 +51,8 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     if [ $attempt -lt $MAX_ATTEMPTS ]; then
       echo "Retrying in 5 seconds..."
       sleep 5
+
+      bosh delete-env /tmp/local-bosh/director/bosh-director.yml --vars-store=/tmp/local-bosh/director/creds.yml --state=/tmp/local-bosh/director/state.json
     else
       echo "All $MAX_ATTEMPTS attempts failed"
       exit 1
