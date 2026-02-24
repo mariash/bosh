@@ -36,6 +36,9 @@ Dir.mktmpdir do |workspace|
         debug_listen_address: "127.0.0.1:17013",
         default_container_grace_time: "0",
         destroy_containers_on_start: true,
+        dns_servers: [
+          "192.168.111.155"
+        ],
         graph_cleanup_threshold_in_mb: "0",
         listen_address: "127.0.0.1:7777",
         listen_network: "tcp",
