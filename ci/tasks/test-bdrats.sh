@@ -51,6 +51,12 @@ for attempt in $(seq 1 $MAX_ATTEMPTS); do
     if [ $attempt -lt $MAX_ATTEMPTS ]; then
       echo "Retrying in 5 seconds..."
       sleep 5
+
+      rm -f /tmp/local-bosh/director/state.json
+
+      curl -s -X GET http://127.0.0.1:7777/containers | jq -r '.[].handle' | while read handle; do
+        curl -s -X DELETE "http://127.0.0.1:7777/containers/$handle"
+      done
     else
       echo "All $MAX_ATTEMPTS attempts failed"
       exit 1
